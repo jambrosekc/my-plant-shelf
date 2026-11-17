@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>My Plant Shelf</title>
 <style>
-:root{--linen:#f6f1e7;--card:#fffdf8;--sage:#5f8a6a;--sage-d:#456b50;--sage-l:#dde8da;--wood:#c9a77c;--ink:#2c3a2f;--mut:#6f7d72;--line:#e3dccb;--warn:#b5651d;--bad:#b3402f;}
+:root{--glass:#e9f1ee;--pot:#d9a78a;--terra:#c2714f;--linen:#f6f1e7;--card:#fffdf8;--sage:#5f8a6a;--sage-d:#456b50;--sage-l:#dde8da;--wood:#c9a77c;--ink:#2c3a2f;--mut:#6f7d72;--line:#e3dccb;--warn:#b5651d;--bad:#b3402f;}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--linen);color:var(--ink);padding-bottom:env(safe-area-inset-bottom,0)}
@@ -58,6 +58,13 @@ textarea{min-height:64px}
 .board{display:flex;gap:8px;flex-wrap:wrap;padding:12px 10px 16px;border-bottom:10px solid var(--wood);border-radius:4px;background:linear-gradient(#fbf8f0,#f1e9d8)}
 .pot{background:var(--card);border:1px solid var(--line);border-radius:10px 10px 22px 22px;padding:8px 12px;font-size:13px;max-width:170px;text-align:center}
 .pot.off{opacity:.45}
+.ishelf{margin:18px 0 6px}.ishelf h3{font-size:15px;color:var(--sage-d);margin-bottom:6px}
+.irow{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:4px 6px;padding:10px 8px 6px;border-bottom:12px solid var(--wood);border-radius:4px;background:linear-gradient(#fbf8f0,#f1e9d8)}
+.icell{text-align:center;font-size:12px;line-height:1.2}.icell svg{width:100%;height:auto;display:block}.icell b{display:block;font-weight:600}.icell em{display:block;font-style:normal;color:var(--mut);font-size:11px}.icell.off{opacity:.4}
+.sheetwrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);max-height:70vh}
+.sheet{border-collapse:collapse;font-size:13px;min-width:900px}.sheet th{position:sticky;top:0;background:var(--sage-l);text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;z-index:1}
+.sheet td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0}.sheet td input[type=text],.sheet td input[type=number],.sheet td select{width:100%;min-width:90px;border:0;background:transparent;padding:7px 8px}.sheet td.c{text-align:center}.sheet td.ro{padding:7px 8px;color:var(--mut);white-space:nowrap}
+.sheet tr:nth-child(even) td{background:#faf6ec}
 .pot em{display:block;font-style:normal;color:var(--mut);font-size:11px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;max-width:90%}
 .mut{color:var(--mut)}
@@ -201,6 +208,59 @@ function passes(p){
 }
 function stageRank(s){var i=STAGES.indexOf(s);return i<0?99:i}
 
+/* ---------- plant drawing (from the illustrated shelf) ---------- */
+function genKey(p){return (p.genus&&p.genus!=='None')?p.genus:'Unknown'}
+var gid=0;
+function hash(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)}
+var LEAF={
+ Alocasia:'M0,-4 C-12,2 -17,-20 -5,-40 L0,-60 L5,-40 C17,-20 12,2 0,-4Z',
+ Philodendron:'M0,-4 C-20,6 -24,-22 -10,-38 C-6,-44 -2,-50 0,-58 C2,-50 6,-44 10,-38 C24,-22 20,6 0,-4Z',
+ Anthurium:'M0,-4 C-26,8 -28,-24 -9,-38 C-5,-42 -2,-46 0,-52 C2,-46 5,-42 9,-38 C28,-24 26,8 0,-4Z',
+ Monstera:'M0,-4 C-24,0 -26,-34 -8,-46 C-3,-50 3,-50 8,-46 C26,-34 24,0 0,-4Z',
+ Begonia:'M0,-4 C-22,4 -24,-26 -6,-42 C4,-50 20,-40 20,-20 C20,-6 10,-2 0,-4Z',
+ gen:'M0,-4 C-16,-2 -18,-30 0,-54 C18,-30 16,-2 0,-4Z'
+};
+var LC={Alocasia:'#5f8260',Philodendron:'#7c9a62',Anthurium:'#3e6150',Monstera:'#6b9468',Begonia:'#8a9a62',Syngonium:'#9cb878',Pothos:'#9ab86a',Rhaphidophora:'#7fa070',Ficus:'#4b6648',Ceropegia:'#7fa57a',Caladium:'#b87a80'};
+function leafCol(p){var t=(p.plant_name||'').toLowerCase();if(/velvet|dark phoenix|ace of spades|warocq/.test(t))return '#2f4a3a';if(/lime|neon|aurea/.test(t))return '#a9c06a';return LC[genKey(p)]||'#5f7d4a'}
+var TRAIL={Pothos:1,Ceropegia:1};
+function varColor(p){
+  var t=(p.plant_name||'').toLowerCase();
+  if(/pink/.test(t))return '#e6b8bd'; if(/aurea|gold/.test(t))return '#d5cf8a'; if(/mint/.test(t))return '#bfe0cc';
+  if(/albo|variegat|marble|snow|tricolor|splash|ghost|galaxy|\bvar\b/.test(t))return '#f3f1e4'; return null;
+}
+function plantSVG(p){
+  var g=genKey(p),path=LEAF[g]||LEAF.gen,h=hash(p.plant_id||p.plant_name||''),n=3+h%3,vc=varColor(p),
+      semi=/semi|leca|hydro/i.test(p.soil_medium||'')||p.purchase_stage==='TC',out='',defs='',stems='',leaves='';
+  var id='g'+(++gid),lc=leafCol(p),velvet=lc==='#2f4a3a';
+  if(vc)defs='<linearGradient id="'+id+'" x1="0" x2="1" y1="0" y2="0"><stop offset=".5" stop-color="'+lc+'"/><stop offset=".5" stop-color="'+vc+'"/></linearGradient>';
+  for(var i=0;i<n;i++){
+    var a=(-48+96*i/(n-1))+((h>>(i*3))%13-6), L=22+((h>>i)%9), sc=.75+(((h>>(i+2))%5)/14),
+        x=50+Math.sin(a*Math.PI/180)*L, y=84-Math.cos(a*Math.PI/180)*L;
+    stems+='<line x1="50" y1="86" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="var(--ink)" stroke-opacity=".7" stroke-width="1.1"/>';
+    var fill=(vc&&i%2===0)?'url(#'+id+')':lc;
+    leaves+='<g transform="translate('+x.toFixed(1)+','+y.toFixed(1)+') rotate('+a.toFixed(0)+') scale('+sc.toFixed(2)+')"><path d="'+path+'" fill="'+fill+'" stroke="var(--ink)" stroke-opacity=".75" stroke-width="1.2" stroke-linejoin="round"/><path d="M0,-4 L0,-46 M0,-18 L-9,-28 M0,-18 L9,-28 M0,-30 L-7,-38 M0,-30 L7,-38" stroke="#f6ead0" stroke-opacity="'+(velvet?'.85':'.5')+'" stroke-width="1.3" fill="none" stroke-linecap="round"/></g>';
+  }
+  var pot;
+  if(semi){
+    var balls='';for(var r=0;r<5;r++)for(var c=0;c<5;c++){balls+='<circle cx="'+(31+c*9.5+(r%2)*4)+'" cy="'+(94+r*8)+'" r="4.4" fill="#c6b49a" stroke="#2f3b33" stroke-opacity=".5" stroke-width=".8"/>'}
+    pot='<clipPath id="c'+id+'"><path d="M26 86 H74 V118 Q74 126 66 126 H34 Q26 126 26 118Z"/></clipPath><g clip-path="url(#c'+id+')">'+balls+'<path d="M34 112 q6 6 4 12 M60 100 q-6 8 -2 16" stroke="#f4efe0" stroke-width=".8" fill="none"/></g>'+
+        '<path d="M26 86 H74 V118 Q74 126 66 126 H34 Q26 126 26 118Z" fill="var(--glass)" stroke="var(--ink)" stroke-width="1.3" stroke-linejoin="round"/><path d="M32 90 V118" stroke="#fff" stroke-opacity=".8" stroke-width="2" stroke-linecap="round"/>';
+  }else{var ps=h%3,pc=ps===0?'var(--pot)':(ps===1?'#f1eee2':'#a9b79f');
+    pot='<path d="M26 88 H74 L69 126 H31Z" fill="'+pc+'" stroke="var(--ink)" stroke-width="1.3" stroke-linejoin="round"/><rect x="24" y="84" width="52" height="8" rx="3" fill="'+pc+'" stroke="var(--ink)" stroke-width="1.3"/>'+(ps===1?'<path d="M28 104 H72" stroke="var(--terra)" stroke-width="2.5"/>':'')+(ps===2?'<path d="M32 98 q18 8 36 0" stroke="var(--ink)" stroke-opacity=".6" stroke-width="1" fill="none"/>':'');}
+  if(TRAIL[g]){var tr='';[[30,-1],[70,1]].forEach(function(s){var x0=s[0],d=s[1];tr+='<path d="M'+x0+' 90 C'+(x0+d*14)+' 100 '+(x0-d*6)+' 112 '+(x0+d*8)+' 126" fill="none" stroke="var(--ink)" stroke-opacity=".7" stroke-width="1.1"/>';[[x0+d*9,102],[x0-d*1,112],[x0+d*7,122]].forEach(function(q){tr+='<ellipse cx="'+q[0]+'" cy="'+q[1]+'" rx="6" ry="4.4" fill="'+lc+'" stroke="var(--ink)" stroke-opacity=".7" stroke-width="1" transform="rotate('+(d*30)+' '+q[0]+' '+q[1]+')"/>'})});pot+=tr}
+  return '<svg viewBox="-12 0 124 130" role="img" aria-label="'+esc(p.plant_name)+'"><defs>'+defs+'</defs>'+stems+leaves+pot+'</svg>';
+}
+
+function illusShelf(list,opts){
+  opts=opts||{};var g={};list.forEach(function(p){var k=p.genus||'Other';(g[k]=g[k]||[]).push(p)});
+  var h='';
+  Object.keys(g).sort().forEach(function(k){
+    h+='<div class="ishelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="irow">'+g[k].map(function(p){
+      var have=p.have_it||p.shipping,sub=opts.sub?opts.sub(p):(p.seller_name||'');
+      return '<div class="icell'+(have?'':' off')+'">'+plantSVG(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc(sub)+'</em></div>'}).join('')+'</div></div>';
+  });
+  return h;
+}
 /* ---------- views ---------- */
 function render(){
   var app=$('#app');
@@ -208,8 +268,8 @@ function render(){
   if(recovery){app.innerHTML=recoveryView();return}
   if(!user){app.innerHTML=authView();return}
   var h='<div class="hdr"><div><h1>'+esc(shelfName)+'</h1><small>'+esc(user.email)+'</small></div><button class="link" data-a="out">Sign out</button></div>';
-  h+='<div class="tabs">'+[['inv','Inventory'],['shelf','Shelf'],['add','Add'],['imp','Import'],['share','Share']].map(function(t){return '<button class="tab'+(tab===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
-  h+='<div class="wrap">'+(tab==='inv'?invView():tab==='shelf'?shelfView():tab==='add'?addView():tab==='share'?shareView():impView())+'</div>';
+  h+='<div class="tabs">'+[['inv','Inventory'],['shelf','Shelf'],['sheet','Sheet'],['add','Add'],['imp','Import'],['share','Share']].map(function(t){return '<button class="tab'+(tab===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
+  h+='<div class="wrap">'+(tab==='inv'?invView():tab==='shelf'?shelfView():tab==='sheet'?sheetView():tab==='add'?addView():tab==='share'?shareView():impView())+'</div>';
   var keep=document.activeElement&&document.activeElement.id==='search';
   var pos=keep?document.activeElement.selectionStart:0;
   app.innerHTML=h;
@@ -283,12 +343,32 @@ function plantRow(p,nums){
 }
 function shelfView(){
   if(!plants.length)return '<div class="card"><p class="mut">Nothing on the shelf yet. Add plants and they appear here, grouped by genus.</p></div>';
-  var g={};plants.forEach(function(p){var k=p.genus||'Other';(g[k]=g[k]||[]).push(p)});
-  var h='<p class="mut">Plants you do not have yet are faded. <a href="plant_shelf_v5.html">Open the illustrated shelf</a></p>';
-  Object.keys(g).sort().forEach(function(k){
-    h+='<div class="shelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="board">'+g[k].map(function(p){return '<div class="pot'+(haveish(p)?'':' off')+'">'+esc(p.plant_name)+'<em>'+esc(p.seller_name||'')+'</em></div>'}).join('')+'</div></div>';
+  return '<p class="mut">Plants you do not have yet are faded.</p>'+illusShelf(plants,{sub:function(p){return p.shipping?'on its way':(p.seller_name||'')}});
+}
+var sheetSort='plant_name',sheetDir=1;
+var SHEETCOLS=[['plant_id','ID','ro'],['plant_name','Name','t'],['genus','Genus','t'],['seller_name','Seller','t'],['purchase_stage','Stage','t'],['where','Where','w'],['to_repot','Repot','b'],['to_water','Water','b'],['sell','Selling','s'],['purchase_price','Paid $','n'],['soil_medium','Soil','t'],['notes','Notes','t']];
+function sheetView(){
+  if(!plants.length)return '<div class="card"><p class="mut">No plants yet.</p></div>';
+  var list=plants.slice().sort(function(a,b){
+    var x=sheetSort==='where'?whereOf(a):sheetSort==='sell'?sellOf(a):a[sheetSort],y=sheetSort==='where'?whereOf(b):sheetSort==='sell'?sellOf(b):b[sheetSort];
+    if(x==null||x==='')x=sheetDir>0?'\uffff':'';if(y==null||y==='')y=sheetDir>0?'\uffff':'';
+    if(typeof x==='string')x=x.toLowerCase();if(typeof y==='string')y=y.toLowerCase();
+    return (x<y?-1:x>y?1:0)*sheetDir;
+  }).filter(passes);
+  var h='<input type="search" id="search" placeholder="Search" value="'+esc(q)+'"><p class="mut">Tap a heading to sort. Tap any cell to edit it.</p><div class="sheetwrap"><table class="sheet"><thead><tr>'+
+   SHEETCOLS.map(function(c){return '<th data-sort="'+c[0]+'">'+c[1]+(sheetSort===c[0]?(sheetDir>0?' ▲':' ▼'):'')+'</th>'}).join('')+'</tr></thead><tbody>';
+  list.forEach(function(p){
+    h+='<tr>'+SHEETCOLS.map(function(c){
+      var k=c[0],t=c[2],id=' data-id="'+p.id+'"';
+      if(t==='ro')return '<td class="ro">'+esc(p.plant_id||'')+'</td>';
+      if(t==='t')return '<td><input type="text" data-e="'+k+'"'+id+' value="'+esc(p[k]||'')+'"></td>';
+      if(t==='n')return '<td><input type="number" step="0.01" data-e="'+k+'"'+id+' value="'+esc(p[k]==null?'':p[k])+'"></td>';
+      if(t==='b')return '<td class="c"><input type="checkbox" data-t="'+k+'"'+id+(p[k]?' checked':'')+'></td>';
+      if(t==='w')return '<td><select data-w="'+p.id+'">'+WHERE.map(function(w){return '<option value="'+w[0]+'"'+(whereOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select></td>';
+      return '<td><select data-sell="'+p.id+'">'+[['none','Not selling'],['sale','For sale'],['sold','Sold']].map(function(w){return '<option value="'+w[0]+'"'+(sellOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select></td>';
+    }).join('')+'</tr>';
   });
-  return h;
+  return h+'</tbody></table></div>';
 }
 function shareView(){
   if(!prof.ready)return '<div class="card"><h3>Sharing</h3><p class="mut">Sharing needs one more database update. Run Part 3 from the setup files in Supabase, then reload this page.</p></div>';
@@ -306,11 +386,9 @@ function publicView(){
   var list=pub.plants||[],g={};
   list.forEach(function(p){var k=p.genus||'Other';(g[k]=g[k]||[]).push(p)});
   var h=head+'<p class="mut">'+list.length+' plants</p>';
-  Object.keys(g).sort().forEach(function(k){
-    h+='<div class="shelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="board">'+g[k].map(function(p){
-      var tag=p.sold?'sold':p.for_sale?('for sale'+(p.asking_price!=null?' $'+p.asking_price:'')):p.shipping?'on its way':'';
-      return '<div class="pot'+((p.have_it||p.shipping)?'':' off')+'">'+esc(p.plant_name)+'<em>'+esc([p.purchase_stage,tag].filter(Boolean).join(' · '))+'</em>'+(pub.show_prices&&p.purchase_price!=null?'<em>paid $'+esc(p.purchase_price)+'</em>':'')+'</div>'}).join('')+'</div></div>';
-  });
+  h+=illusShelf(list,{sub:function(p){
+    var tag=p.sold?'sold':p.for_sale?('for sale'+(p.asking_price!=null?' $'+p.asking_price:'')):p.shipping?'on its way':'';
+    return [p.purchase_stage,tag].filter(Boolean).join(' · ')+(pub.show_prices&&p.purchase_price!=null?' · paid $'+p.purchase_price:'')}});
   return h+'</div>';
 }
 function radios(name,arr,def){return '<div class="flags">'+arr.map(function(a){return '<label class="rad"><input type="radio" name="'+name+'" value="'+a[0]+'"'+(a[0]===def?' checked':'')+'> '+a[1]+'</label>'}).join('')+'</div>'}
@@ -421,7 +499,8 @@ var SAMPLES=[
 
 /* ---------- events ---------- */
 document.addEventListener('click',async function(e){
-  var t=e.target.closest('[data-tab],[data-f],[data-t],[data-s],[data-open],[data-del],[data-a]');if(!t)return;
+  var t=e.target.closest('th[data-sort],[data-tab],[data-f],[data-t],[data-s],[data-open],[data-del],[data-a]');if(!t)return;
+  if(t.dataset.sort){if(sheetSort===t.dataset.sort)sheetDir=-sheetDir;else{sheetSort=t.dataset.sort;sheetDir=1}render();return}
   if(t.dataset.s){patchPlant(t.dataset.id,sellPatch(t.dataset.s));return}
   if(t.dataset.tab){tab=t.dataset.tab;render();return}
   if(t.dataset.f){filter=t.dataset.f;render();return}
@@ -485,6 +564,8 @@ document.addEventListener('input',function(e){if(e.target.id==='search'){q=e.tar
 document.addEventListener('change',function(e){
   var t=e.target;
   if(t.name==='sell'){$('#a_askwrap').hidden=t.value!=='sale';return}
+  if(t.dataset&&t.dataset.sell){patchPlant(t.dataset.sell,sellPatch(t.value));return}
+  if(t.dataset&&t.dataset.t&&t.type==='checkbox'){var pp2=plants.find(function(x){return x.id===t.dataset.id});if(pp2)patchPlant(pp2.id,linkPatch(pp2,t.dataset.t));return}
   if(t.dataset&&t.dataset.w){patchPlant(t.dataset.w,wherePatch(t.value));return}
   if(t.id==='markdone'){markDone=t.checked;return}
   if(t.dataset&&t.dataset.pc){var cur=pickedCols().map(function(c){return c[0]}),ix=cur.indexOf(t.dataset.pc);if(t.checked&&ix<0)cur.push(t.dataset.pc);if(!t.checked&&ix>=0)cur.splice(ix,1);cur=PCOLS.map(function(c){return c[0]}).filter(function(n){return cur.indexOf(n)>=0});try{localStorage.setItem('printCols',JSON.stringify(cur))}catch(x){}return}
