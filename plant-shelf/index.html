@@ -43,6 +43,11 @@ textarea{min-height:64px}
 .plant .nm b{display:block;font-weight:600}
 .plant .nm small{color:var(--mut);font-size:12px}
 .tog{display:flex;gap:5px}
+.fgrp{display:flex;align-items:center;gap:8px}.flab{font-size:11px;text-transform:uppercase;color:var(--mut);min-width:50px}
+.sec{margin:14px 0 4px;font-size:13px;font-weight:700;color:var(--sage-d)}
+.rad{display:flex;gap:6px;align-items:center;margin:0;font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--card)}
+.wsel{border:1px solid var(--line);border-radius:9px;padding:7px 6px;font-size:12px;background:#fff;max-width:128px}
+.wsel.w-ship{background:#d9a441;color:#fff;border-color:#d9a441}.wsel.w-labeled{background:var(--sage);color:#fff;border-color:var(--sage)}.wsel.w-print{background:var(--sage-l);border-color:var(--sage)}.wsel.w-missing{background:#f6dcdc}
 .tg{border:1px solid var(--line);background:#fff;color:var(--mut);border-radius:9px;padding:7px 9px;font-size:12px;min-width:54px}
 .tg.on{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:600}
 .tg.ship.on{background:#d9a441;border-color:#d9a441;color:#fff}
@@ -97,7 +102,7 @@ var ALIAS={'Current Temp (°F)':'Current Temp (F)','Inventory Note':'Notes'};
 var STAGES=['TC','Plug','Starter','Established','Juvenile','Corm','Cutting','Tree'];
 
 /* ---------- state ---------- */
-var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',open={},msg='',importState=null,authMode='in',recovery=false,needResend='',prof={ready:false,is_public:false,show_prices:false,public_slug:''},pubSlug=new URLSearchParams(location.search).get('shelf'),pub=null,pubErr='';
+var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',pickOpen=false,markDone=false,open={},msg='',importState=null,authMode='in',recovery=false,needResend='',prof={ready:false,is_public:false,show_prices:false,public_slug:''},pubSlug=new URLSearchParams(location.search).get('shelf'),pub=null,pubErr='';
 
 function $(s,r){return (r||document).querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -158,18 +163,20 @@ async function addPlants(rows){
 }
 
 /* ---------- helpers ---------- */
-function linkPatch(p,k){
-  var on=!p[k],patch={};patch[k]=on;
-  if(on){
-    if(k==='have_it')patch.shipping=false;          // it arrived
-    if(k==='shipping')patch.have_it=false;          // not here yet
-    if(k==='labeled')patch.to_print=false;          // label done
-    if(k==='to_print')patch.labeled=false;          // needs a label
-    if(k==='sold')patch.for_sale=false;
-    if(k==='for_sale')patch.sold=false;
-  }
-  return patch;
+var WHERE=[['ship','Shipping'],['received','Received'],['print','Needs label printed'],['labeled','Labeled'],['missing',"Can't find it"]];
+function whereOf(p){
+  if(p.shipping)return 'ship';
+  if(!p.have_it)return 'missing';
+  if(p.labeled)return 'labeled';
+  if(p.to_print)return 'print';
+  return 'received';
 }
+function wherePatch(w){
+  return {shipping:w==='ship',have_it:w==='received'||w==='print'||w==='labeled',labeled:w==='labeled',to_print:w==='print'};
+}
+function sellOf(p){return p.sold?'sold':p.for_sale?'sale':'none'}
+function sellPatch(w){return {for_sale:w==='sale',sold:w==='sold'}}
+function linkPatch(p,k){var o={};o[k]=!p[k];return o}
 function haveish(p){return p.have_it||p.shipping}
 function labelNums(){
   var cnt={},tot={},m={};
@@ -180,12 +187,11 @@ function labelNums(){
 function passes(p){
   if(q){var s=(p.plant_name+' '+(p.seller_name||'')+' '+(p.plant_id||'')+' '+(p.genus||'')).toLowerCase();if(s.indexOf(q.toLowerCase())<0)return false}
   switch(filter){
-    case 'have':return haveish(p);
-    case 'labeled':return p.labeled;
-    case 'missing':return !haveish(p);
-    case 'unlabeled':return !p.labeled;
+    case 'labeled':return whereOf(p)==='labeled';
+    case 'missing':return whereOf(p)==='missing';
+    case 'received':return whereOf(p)==='received';
     case 'shipping':return p.shipping;
-    case 'print':return p.to_print;
+    case 'print':return whereOf(p)==='print';
     case 'repot':return p.to_repot;
     case 'water':return p.to_water;
     case 'sale':return p.for_sale&&!p.sold;
@@ -235,11 +241,16 @@ function recoveryView(){
 }
 function invView(){
   var nums=labelNums();
-  var tot=plants.length,hv=plants.filter(haveish).length,lb=plants.filter(function(p){return p.labeled}).length,sh=plants.filter(function(p){return p.shipping}).length;
+  var tot=plants.length,hv=plants.filter(function(p){return p.have_it}).length,lb=plants.filter(function(p){return p.labeled}).length,sh=plants.filter(function(p){return p.shipping}).length;
   var h='<div class="card"><div class="stats"><div class="stat"><b>'+tot+'</b><span>Plants</span></div><div class="stat"><b>'+hv+'</b><span>Have it</span></div><div class="stat"><b>'+lb+'</b><span>Labeled</span></div><div class="stat"><b>'+sh+'</b><span>Shipping</span></div></div></div>';
   if(!tot){h+='<div class="card"><h3>Your shelf is empty</h3><p class="mut">Add a plant, import a spreadsheet, or load a few sample plants to look around.</p><div class="row"><button class="btn" data-tab="add">Add a plant</button><button class="btn alt" data-tab="imp">Import Excel</button><button class="btn alt" data-a="sample">Load samples</button></div></div>';return h}
   h+='<input type="search" id="search" placeholder="Search name, seller or ID" value="'+esc(q)+'">';
-  h+='<div class="chips">'+[['all','All'],['have','Have it'],['missing','Missing'],['labeled','Labeled'],['unlabeled','Not labeled'],['shipping','Shipping'],['print','To print'],['repot','To repot'],['water','To water'],['sale','For sale'],['sold','Sold']].map(function(c){return '<button class="chip'+(filter===c[0]?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'</button>'}).join('')+'</div>';
+  function chips(lab,arr){return '<div class="fgrp"><span class="flab">'+lab+'</span><div class="chips">'+arr.map(function(c){return '<button class="chip'+(filter===c[0]?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'</button>'}).join('')+'</div></div>'}
+  h+=chips('Where',[['all','All'],['shipping','Shipping'],['received','Received'],['print','Needs label'],['labeled','Labeled'],['missing',"Can't find"]]);
+  h+=chips('Care',[['repot','To repot'],['water','To water']]);
+  h+=chips('Selling',[['sale','For sale'],['sold','Sold']]);
+  var np=plants.filter(function(p){return whereOf(p)==='print'}).length;
+  if(np)h+='<div class="card"><b>'+np+' label'+(np>1?'s':'')+' waiting to print</b><div class="row" style="margin-top:8px"><button class="btn" data-a="pickcols">Download print sheet</button></div>'+(pickOpen?pickerHtml():'')+'</div>';
   var list=plants.filter(passes),bySeller={};
   list.forEach(function(p){var s=p.seller_name||'Seller not set';(bySeller[s]=bySeller[s]||[]).push(p)});
   var sellers=Object.keys(bySeller).sort(function(a,b){return a==='Seller not set'?1:b==='Seller not set'?-1:a.toLowerCase()<b.toLowerCase()?-1:1});
@@ -258,9 +269,10 @@ function invView(){
 function plantRow(p,nums){
   var o=open[p.id];
   var h='<div class="plant"><div class="top"><button class="nm" data-open="'+p.id+'"><b>'+esc(p.plant_name)+'</b><small>'+esc(p.plant_id||'')+' · '+nums[p.id]+(p.for_sale&&!p.sold?' · for sale':'')+(p.sold?' · sold':'')+'</small></button>'+
-   '<div class="tog"><button class="tg ship'+(p.shipping?' on':'')+'" data-t="shipping" data-id="'+p.id+'">Ship</button><button class="tg'+(p.have_it?' on':'')+'" data-t="have_it" data-id="'+p.id+'">Have</button><button class="tg'+(p.labeled?' on':'')+'" data-t="labeled" data-id="'+p.id+'">Label</button></div></div>';
+   '<select class="wsel w-'+whereOf(p)+'" data-w="'+p.id+'">'+WHERE.map(function(w){return '<option value="'+w[0]+'"'+(whereOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select></div>';
   if(o){
-    h+='<div class="detail"><div class="flags">'+[['to_print','Needs label printed'],['to_repot','To repot'],['to_water','To water'],['for_sale','For sale'],['sold','Sold']].map(function(f){return '<button class="chip'+(p[f[0]]?' on':'')+'" data-t="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('')+'</div>'+
+    h+='<div class="detail"><div class="sec">Care</div><div class="flags">'+[['to_repot','Needs repot'],['to_water','Needs water']].map(function(f){return '<button class="chip'+(p[f[0]]?' on':'')+'" data-t="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('')+'</div>'+
+     '<div class="sec">Selling</div><div class="flags">'+[['none','Not selling'],['sale','For sale'],['sold','Sold']].map(function(f){return '<button class="chip'+(sellOf(p)===f[0]?' on':'')+'" data-s="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('')+'</div>'+
      '<div class="grid2"><div><label>Genus</label><input type="text" data-e="genus" data-id="'+p.id+'" value="'+esc(p.genus||'')+'"></div><div><label>Stage</label><input type="text" data-e="purchase_stage" data-id="'+p.id+'" value="'+esc(p.purchase_stage||'')+'"></div>'+
      '<div><label>Seller</label><input type="text" data-e="seller_name" data-id="'+p.id+'" value="'+esc(p.seller_name||'')+'"></div><div><label>Paid ($)</label><input type="number" step="0.01" data-e="purchase_price" data-id="'+p.id+'" value="'+esc(p.purchase_price==null?'':p.purchase_price)+'"></div>'+
      '<div><label>Soil</label><input type="text" data-e="soil_medium" data-id="'+p.id+'" value="'+esc(p.soil_medium||'')+'"></div><div><label>Asking price ($)</label><input type="number" step="0.01" data-e="asking_price" data-id="'+p.id+'" value="'+esc(p.asking_price==null?'':p.asking_price)+'"></div></div>'+
@@ -301,17 +313,40 @@ function publicView(){
   });
   return h+'</div>';
 }
+function radios(name,arr,def){return '<div class="flags">'+arr.map(function(a){return '<label class="rad"><input type="radio" name="'+name+'" value="'+a[0]+'"'+(a[0]===def?' checked':'')+'> '+a[1]+'</label>'}).join('')+'</div>'}
 function addView(){
-  function cb(id,label){return '<label style="display:flex;gap:8px;align-items:center;margin:0;font-size:14px;color:var(--ink)"><input type="checkbox" id="'+id+'"> '+label+'</label>'}
   return '<div class="card"><h3>Add a plant</h3><form id="addf"><label>Plant name *</label><input type="text" id="a_name" required>'+
    '<div class="grid2"><div><label>Genus</label><input type="text" id="a_genus"></div><div><label>Stage</label><select id="a_stage"><option value=""></option>'+STAGES.map(function(s){return '<option>'+s+'</option>'}).join('')+'</select></div>'+
    '<div><label>Seller</label><input type="text" id="a_seller"></div><div><label>Where bought</label><input type="text" id="a_src"></div>'+
    '<div><label>Date bought</label><input type="date" id="a_date"></div><div><label>Paid ($)</label><input type="number" step="0.01" id="a_price"></div>'+
    '<div><label>Soil</label><input type="text" id="a_soil"></div><div><label>Last watered</label><input type="date" id="a_water"></div></div>'+
-   '<label>Status</label><div class="grid2" style="gap:8px">'+cb('a_have','Have it')+cb('a_ship','Still shipping')+cb('a_lab','Labeled')+cb('a_print','Needs a label printed')+cb('a_repot','Needs repot')+cb('a_towater','Needs water')+cb('a_sale','For sale')+'</div>'+
-   '<p class="mut" style="margin:6px 0 0">Leave Labeled unchecked and the plant shows under Not labeled. Check Needs a label printed to put it on your print list.</p>'+
+   '<div class="sec">1. Where is it?</div>'+radios('where',WHERE,'received')+
+   '<div class="sec">2. Care</div><div class="flags"><label class="rad"><input type="checkbox" id="a_repot"> Needs repot</label><label class="rad"><input type="checkbox" id="a_towater"> Needs water</label></div>'+
+   '<div class="sec">3. Selling</div>'+radios('sell',[['none','Not selling'],['sale','For sale'],['sold','Sold']],'none')+
    '<div id="a_askwrap" hidden><label>Asking price ($)</label><input type="number" step="0.01" id="a_ask"></div>'+
    '<label>Notes</label><textarea id="a_notes"></textarea><div class="row" style="margin-top:12px"><button class="btn" type="submit">Add plant</button></div></form></div>';
+}
+var PCOLS=[['Name',function(p){return p.plant_name},1],['Label #',function(p,n){return n[p.id]},1],['Seller',function(p){return p.seller_name},1],['Date Purchased',function(p){return p.purchase_date},1],['Plant ID',function(p){return p.plant_id},1],['Genus',function(p){return p.genus},0],['Stage',function(p){return p.purchase_stage},0],['Soil',function(p){return p.soil_medium},0],['Notes',function(p){return p.notes},0]];
+function pickedCols(){
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('printCols')||'null')}catch(x){}
+  return PCOLS.filter(function(c){return saved?saved.indexOf(c[0])>=0:c[2]})
+}
+function pickerHtml(){
+  var on=pickedCols().map(function(c){return c[0]});
+  return '<div class="picker"><div class="mut" style="margin:8px 0 4px">Columns in the sheet:</div><div class="flags">'+PCOLS.map(function(c){return '<label class="rad"><input type="checkbox" data-pc="'+c[0]+'"'+(on.indexOf(c[0])>=0?' checked':'')+'> '+c[0]+'</label>'}).join('')+'</div>'+
+   '<label class="rad" style="margin-top:8px"><input type="checkbox" id="markdone"'+(markDone?' checked':'')+'> Mark these as Labeled after downloading</label>'+
+   '<div class="row" style="margin-top:10px"><button class="btn" data-a="dlprint">Download Excel</button></div></div>';
+}
+function printRows(){
+  var cols=pickedCols(),nums=labelNums(),list=plants.filter(function(p){return whereOf(p)==='print'});
+  return {cols:cols,list:list,aoa:[cols.map(function(c){return c[0]})].concat(list.map(function(p){return cols.map(function(c){var v=c[1](p,nums);return v==null?'':v})}))};
+}
+async function downloadPrint(){
+  var r=printRows();if(!r.list.length){toast('Nothing to print');return}
+  var ws=XLSX.utils.aoa_to_sheet(r.aoa),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Print Tags');
+  XLSX.writeFile(wb,'plant_labels_to_print.xlsx');
+  if(markDone){for(var i=0;i<r.list.length;i++)await patchPlant(r.list[i].id,{labeled:true,to_print:false});toast('Downloaded and marked labeled')}
+  else toast('Downloaded '+r.list.length+' labels');
 }
 function impView(){
   var h='<div class="card"><h3>Import from Excel</h3><p class="mut">Use the template so the column names match exactly. Only Plant Name is required.</p><div class="row"><button class="btn alt" data-a="tpl">Download template</button></div>'+
@@ -386,7 +421,8 @@ var SAMPLES=[
 
 /* ---------- events ---------- */
 document.addEventListener('click',async function(e){
-  var t=e.target.closest('[data-tab],[data-f],[data-t],[data-open],[data-del],[data-a]');if(!t)return;
+  var t=e.target.closest('[data-tab],[data-f],[data-t],[data-s],[data-open],[data-del],[data-a]');if(!t)return;
+  if(t.dataset.s){patchPlant(t.dataset.id,sellPatch(t.dataset.s));return}
   if(t.dataset.tab){tab=t.dataset.tab;render();return}
   if(t.dataset.f){filter=t.dataset.f;render();return}
   if(t.dataset.open){open[t.dataset.open]=!open[t.dataset.open];render();return}
@@ -399,6 +435,8 @@ document.addEventListener('click',async function(e){
   if(a==='resend'){var rr=await sb.auth.resend({type:'signup',email:needResend});msg=rr.error?rr.error.message:'Sent. Check your email for a new confirmation link.';render();return}
   if(a==='out'){await sb.auth.signOut();user=null;plants=[];render();return}
   if(a==='tpl'){downloadTemplate();return}
+  if(a==='pickcols'){pickOpen=!pickOpen;render();return}
+  if(a==='dlprint'){downloadPrint();return}
   if(a==='copylink'){try{await navigator.clipboard.writeText(shareLink());toast('Link copied')}catch(x){var el=$('#plink');if(el){el.select();toast('Press and hold to copy')}}return}
   if(a==='newlink'){if(confirm('The old link will stop working. Continue?'))saveProfile({public_slug:newSlug()});return}
   if(a==='sample'){var r=await addPlants(SAMPLES);if(r.error)toast('Could not add: '+r.error.message);else{toast('Added '+r.done+' sample plants');render()}return}
@@ -437,9 +475,8 @@ document.addEventListener('submit',async function(e){
     recovery=false;msg='Password updated.';
     var gs=await sb.auth.getSession();await boot(gs.data&&gs.data.session);toast('Password updated');return}
   if(e.target.id==='addf'){
-    var ship=$('#a_ship').checked,have=$('#a_have').checked&&!ship,lab=$('#a_lab').checked,prt=$('#a_print').checked;
-    if(prt)lab=false;
-    var row={plant_name:$('#a_name').value.trim(),genus:$('#a_genus').value.trim()||null,purchase_stage:$('#a_stage').value||null,seller_name:$('#a_seller').value.trim()||null,sourced_from:$('#a_src').value.trim()||null,purchase_date:$('#a_date').value||null,purchase_price:toNum($('#a_price').value),soil_medium:$('#a_soil').value.trim()||null,last_watered:$('#a_water').value||null,have_it:have,shipping:ship,labeled:lab,to_print:prt,to_repot:$('#a_repot').checked,to_water:$('#a_towater').checked,for_sale:$('#a_sale').checked,asking_price:$('#a_sale').checked?toNum($('#a_ask').value):null,notes:$('#a_notes').value.trim()||null};
+    var w=(document.querySelector('input[name=where]:checked')||{}).value||'received',sl=(document.querySelector('input[name=sell]:checked')||{}).value||'none';
+    var row=Object.assign({plant_name:$('#a_name').value.trim(),genus:$('#a_genus').value.trim()||null,purchase_stage:$('#a_stage').value||null,seller_name:$('#a_seller').value.trim()||null,sourced_from:$('#a_src').value.trim()||null,purchase_date:$('#a_date').value||null,purchase_price:toNum($('#a_price').value),soil_medium:$('#a_soil').value.trim()||null,last_watered:$('#a_water').value||null,to_repot:$('#a_repot').checked,to_water:$('#a_towater').checked,asking_price:sl==='sale'?toNum($('#a_ask').value):null,notes:$('#a_notes').value.trim()||null},wherePatch(w),sellPatch(sl));
     var res=await addPlants([row]);
     if(res.error)toast('Could not add: '+res.error.message);else{toast('Added '+row.plant_name);tab='inv';render()}
   }
@@ -447,7 +484,10 @@ document.addEventListener('submit',async function(e){
 document.addEventListener('input',function(e){if(e.target.id==='search'){q=e.target.value;render()}});
 document.addEventListener('change',function(e){
   var t=e.target;
-  if(t.id==='a_sale'){$('#a_askwrap').hidden=!t.checked;return}
+  if(t.name==='sell'){$('#a_askwrap').hidden=t.value!=='sale';return}
+  if(t.dataset&&t.dataset.w){patchPlant(t.dataset.w,wherePatch(t.value));return}
+  if(t.id==='markdone'){markDone=t.checked;return}
+  if(t.dataset&&t.dataset.pc){var cur=pickedCols().map(function(c){return c[0]}),ix=cur.indexOf(t.dataset.pc);if(t.checked&&ix<0)cur.push(t.dataset.pc);if(!t.checked&&ix>=0)cur.splice(ix,1);cur=PCOLS.map(function(c){return c[0]}).filter(function(n){return cur.indexOf(n)>=0});try{localStorage.setItem('printCols',JSON.stringify(cur))}catch(x){}return}
   if(t.dataset&&t.dataset.p){var pp={};pp[t.dataset.p]=t.checked;saveProfile(pp);return}
   if(t.dataset&&t.dataset.e){var v=t.value.trim(),k=t.dataset.e;var patch={};patch[k]=(k==='purchase_price'||k==='asking_price')?toNum(v):(v||null);patchPlant(t.dataset.id,patch);return}
   if(t.id==='file'&&t.files[0]){
