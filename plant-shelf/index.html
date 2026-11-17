@@ -58,6 +58,12 @@ textarea{min-height:64px}
 .board{display:flex;gap:8px;flex-wrap:wrap;padding:12px 10px 16px;border-bottom:10px solid var(--wood);border-radius:4px;background:linear-gradient(#fbf8f0,#f1e9d8)}
 .pot{background:var(--card);border:1px solid var(--line);border-radius:10px 10px 22px 22px;padding:8px 12px;font-size:13px;max-width:170px;text-align:center}
 .pot.off{opacity:.45}
+.hbtns{display:flex;gap:8px}.hbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:6px 12px;font-size:14px}
+.menu{position:sticky;top:58px;z-index:6;max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.15);display:flex;flex-direction:column;overflow:hidden}.menu button{background:none;border:0;border-bottom:1px solid var(--line);text-align:left;padding:13px 16px;font-size:15px;color:var(--ink)}.menu button:last-child{border:0;color:var(--bad)}
+.seg{display:flex;border:1px solid var(--sage);border-radius:999px;overflow:hidden;margin-top:4px}.seg button{flex:1;background:var(--card);border:0;padding:9px 4px;font-size:14px;color:var(--sage-d)}.seg button.on{background:var(--sage);color:#fff;font-weight:600}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;text-align:center}.pcard.off .pc{opacity:.45}.pc{background:none;border:0;padding:0;width:100%;font-size:13px;color:var(--ink)}.pc svg{width:100%;height:auto;display:block}.pc b{display:block;font-weight:600;line-height:1.2}.pc em{display:block;font-style:normal;color:var(--mut);font-size:11px}.pcard .wsel{margin-top:6px;width:100%;max-width:none}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;display:flex;align-items:flex-end;justify-content:center}.msheet{background:var(--card);width:100%;max-width:760px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
+.icell[data-m]{cursor:pointer}
 .pubbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff6dc;border-bottom:1px solid #e8d9a8;color:#6b5a1e;padding:8px 14px;font-size:13px}.pubbar.mine{background:var(--sage-l);border-color:var(--sage);color:var(--sage-d)}.pubbar a{color:inherit;font-weight:600;white-space:nowrap}
 .ishelf{margin:18px 0 6px}.ishelf h3{font-size:15px;color:var(--sage-d);margin-bottom:6px}
 .irow{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:4px 6px;padding:10px 8px 6px;border-bottom:12px solid var(--wood);border-radius:4px;background:linear-gradient(#fbf8f0,#f1e9d8)}
@@ -110,7 +116,7 @@ var ALIAS={'Current Temp (°F)':'Current Temp (F)','Inventory Note':'Notes'};
 var STAGES=['TC','Plug','Starter','Established','Juvenile','Corm','Cutting','Tree'];
 
 /* ---------- state ---------- */
-var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',pickOpen=false,markDone=false,open={},msg='',importState=null,authMode='in',recovery=false,needResend='',prof={ready:false,is_public:false,show_prices:false,public_slug:''},pubSlug=new URLSearchParams(location.search).get('shelf'),pub=null,pubErr='';
+var sb=null,user=null,shelfName='My Shelf',plants=[],tab='home',view=(function(){try{return localStorage.getItem('view')||'shelf'}catch(x){return 'shelf'}})(),menuOpen=false,filtersOpen=false,modalId=null,filter='all',q='',pickOpen=false,markDone=false,open={},msg='',importState=null,authMode='in',recovery=false,needResend='',prof={ready:false,is_public:false,show_prices:false,public_slug:''},pubSlug=new URLSearchParams(location.search).get('shelf'),pub=null,pubErr='';
 
 function $(s,r){return (r||document).querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -259,7 +265,7 @@ function illusShelf(list,opts){
   Object.keys(g).sort().forEach(function(k){
     h+='<div class="ishelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="irow">'+g[k].map(function(p){
       var have=p.have_it||p.shipping,sub=opts.sub?opts.sub(p):(p.seller_name||'');
-      return '<div class="icell'+(have?'':' off')+'">'+plantSVG(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc(sub)+'</em></div>'}).join('')+'</div></div>';
+      return '<div class="icell'+(have?'':' off')+'"'+(opts.edit?' data-m="'+p.id+'"':'')+'>'+plantSVG(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc(sub)+'</em></div>'}).join('')+'</div></div>';
   });
   return h;
 }
@@ -269,9 +275,18 @@ function render(){
   if(pubSlug){app.innerHTML=publicView();return}
   if(recovery){app.innerHTML=recoveryView();return}
   if(!user){app.innerHTML=authView();return}
-  var h='<div class="hdr"><div><h1>'+esc(shelfName)+'</h1><small>'+esc(user.email)+'</small></div><button class="link" data-a="out">Sign out</button></div>';
-  h+='<div class="tabs">'+[['inv','Inventory'],['shelf','Shelf'],['sheet','Sheet'],['add','Add'],['imp','Import'],['share','Share']].map(function(t){return '<button class="tab'+(tab===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
-  h+='<div class="wrap">'+(tab==='inv'?invView():tab==='shelf'?shelfView():tab==='sheet'?sheetView():tab==='add'?addView():tab==='share'?shareView():impView())+'</div>';
+  var h='<div class="hdr"><div><h1>'+esc(shelfName)+'</h1><small>'+esc(user.email)+'</small></div><div class="hbtns"><button class="hbtn" data-tab="add">+ Add</button><button class="hbtn" data-a="menu" aria-label="Menu">☰</button></div></div>';
+  if(menuOpen)h+='<div class="menu">'+[['add','Add a plant'],['imp','Import from Excel'],['share','Share my shelf']].map(function(t){return '<button data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'<button data-a="out">Sign out</button></div>';
+  var body;
+  if(tab==='add')body='<button class="link" style="color:var(--sage-d)" data-tab="home">← Back to my plants</button>'+addView();
+  else if(tab==='imp')body='<button class="link" style="color:var(--sage-d)" data-tab="home">← Back to my plants</button>'+impView();
+  else if(tab==='share')body='<button class="link" style="color:var(--sage-d)" data-tab="home">← Back to my plants</button>'+shareView();
+  else if(!plants.length)body=listView([]);
+  else{
+    var list=plants.filter(passes);
+    body=toolbar()+(view==='cards'?(list.length?cardsView(list):'<p class="mut">Nothing matches.</p>'):view==='list'?listView(list):view==='sheet'?sheetView(list):shelfView(list));
+  }
+  h+='<div class="wrap">'+body+'</div>'+(modalId?modalHtml():'');
   var keep=document.activeElement&&document.activeElement.id==='search';
   var pos=keep?document.activeElement.selectionStart:0;
   app.innerHTML=h;
@@ -301,19 +316,33 @@ function authView(){
 function recoveryView(){
   return '<div class="wrap"><div class="card" style="margin-top:8vh"><h2>Choose a new password</h2><form id="recf"><label>New password</label><input type="password" id="npw" minlength="6" autocomplete="new-password" required><div class="row" style="margin-top:14px"><button class="btn" type="submit">Save password</button></div></form>'+msgBox()+'</div></div>';
 }
-function invView(){
+function toolbar(){
+  var np=plants.filter(function(p){return whereOf(p)==='print'}).length;
+  function chips(lab,arr){return '<div class="fgrp"><span class="flab">'+lab+'</span><div class="chips">'+arr.map(function(c){return '<button class="chip'+(filter===c[0]?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'</button>'}).join('')+'</div></div>'}
+  var h='<div class="seg">'+[['shelf','Shelf'],['cards','Cards'],['list','List'],['sheet','Sheet']].map(function(v){return '<button class="'+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]+'</button>'}).join('')+'</div>';
+  h+='<div class="row" style="gap:8px;margin:10px 0 4px"><input type="search" id="search" placeholder="Search name, seller or ID" value="'+esc(q)+'" style="flex:1;margin:0"><button class="chip'+(filter!=='all'?' on':'')+'" data-a="filters">Filter'+(filter!=='all'?' •':'')+'</button></div>';
+  if(filtersOpen||filter!=='all'&&filtersOpen)h+='<div class="card" style="margin:6px 0">'+chips('Where',[['all','All'],['shipping','Shipping'],['received','Received'],['print','Needs label'],['labeled','Labeled'],['missing',"Can't find"]])+chips('Care',[['repot','To repot'],['water','To water']])+chips('Selling',[['sale','For sale'],['sold','Sold']])+'</div>';
+  if(np)h+='<div class="card"><b>'+np+' label'+(np>1?'s':'')+' waiting to print</b><div class="row" style="margin-top:8px"><button class="btn" data-a="pickcols">Download print sheet</button></div>'+(pickOpen?pickerHtml():'')+'</div>';
+  return h;
+}
+function cardsView(list){
+  var nums=labelNums();
+  return '<div class="cardgrid">'+list.map(function(p){
+    var have=p.have_it||p.shipping;
+    return '<div class="pcard'+(have?'':' off')+'"><button class="pc" data-m="'+p.id+'">'+plantSVG(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc([p.seller_name,p.purchase_stage].filter(Boolean).join(' · '))+'</em><em>'+esc(p.plant_id||'')+' · '+nums[p.id]+(p.sold?' · sold':p.for_sale?' · for sale':'')+'</em></button>'+
+     '<select class="wsel w-'+whereOf(p)+'" data-w="'+p.id+'">'+WHERE.map(function(w){return '<option value="'+w[0]+'"'+(whereOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select></div>'}).join('')+'</div>';
+}
+function modalHtml(){
+  var p=plants.find(function(x){return x.id===modalId});if(!p){modalId=null;return ''}
+  return '<div class="modal" data-a="closem"><div class="msheet"><div class="row" style="justify-content:space-between;align-items:center"><h3>'+esc(p.plant_name)+'</h3><button class="link" style="color:var(--sage-d)" data-a="closem">Done</button></div><div class="mut">'+esc(p.plant_id||'')+'</div>'+
+   '<div class="sec">Where is it?</div><div class="flags">'+WHERE.map(function(w){return '<button class="chip'+(whereOf(p)===w[0]?' on':'')+'" data-w2="'+w[0]+'" data-id="'+p.id+'">'+w[1]+'</button>'}).join('')+'</div>'+detailHtml(p)+'</div></div>';
+}
+function listView(list){
   var nums=labelNums();
   var tot=plants.length,hv=plants.filter(function(p){return p.have_it}).length,lb=plants.filter(function(p){return p.labeled}).length,sh=plants.filter(function(p){return p.shipping}).length;
   var h='<div class="card"><div class="stats"><div class="stat"><b>'+tot+'</b><span>Plants</span></div><div class="stat"><b>'+hv+'</b><span>Have it</span></div><div class="stat"><b>'+lb+'</b><span>Labeled</span></div><div class="stat"><b>'+sh+'</b><span>Shipping</span></div></div></div>';
   if(!tot){h+='<div class="card"><h3>Your shelf is empty</h3><p class="mut">Add a plant, import a spreadsheet, or load a few sample plants to look around.</p><div class="row"><button class="btn" data-tab="add">Add a plant</button><button class="btn alt" data-tab="imp">Import Excel</button><button class="btn alt" data-a="sample">Load samples</button></div></div>';return h}
-  h+='<input type="search" id="search" placeholder="Search name, seller or ID" value="'+esc(q)+'">';
-  function chips(lab,arr){return '<div class="fgrp"><span class="flab">'+lab+'</span><div class="chips">'+arr.map(function(c){return '<button class="chip'+(filter===c[0]?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'</button>'}).join('')+'</div></div>'}
-  h+=chips('Where',[['all','All'],['shipping','Shipping'],['received','Received'],['print','Needs label'],['labeled','Labeled'],['missing',"Can't find"]]);
-  h+=chips('Care',[['repot','To repot'],['water','To water']]);
-  h+=chips('Selling',[['sale','For sale'],['sold','Sold']]);
-  var np=plants.filter(function(p){return whereOf(p)==='print'}).length;
-  if(np)h+='<div class="card"><b>'+np+' label'+(np>1?'s':'')+' waiting to print</b><div class="row" style="margin-top:8px"><button class="btn" data-a="pickcols">Download print sheet</button></div>'+(pickOpen?pickerHtml():'')+'</div>';
-  var list=plants.filter(passes),bySeller={};
+  var bySeller={};
   list.forEach(function(p){var s=p.seller_name||'Seller not set';(bySeller[s]=bySeller[s]||[]).push(p)});
   var sellers=Object.keys(bySeller).sort(function(a,b){return a==='Seller not set'?1:b==='Seller not set'?-1:a.toLowerCase()<b.toLowerCase()?-1:1});
   if(!list.length)h+='<p class="mut">Nothing matches.</p>';
@@ -328,11 +357,8 @@ function invView(){
   });
   return h;
 }
-function plantRow(p,nums){
-  var o=open[p.id];
-  var h='<div class="plant"><div class="top"><button class="nm" data-open="'+p.id+'"><b>'+esc(p.plant_name)+'</b><small>'+esc(p.plant_id||'')+' · '+nums[p.id]+(p.for_sale&&!p.sold?' · for sale':'')+(p.sold?' · sold':'')+'</small></button>'+
-   '<select class="wsel w-'+whereOf(p)+'" data-w="'+p.id+'">'+WHERE.map(function(w){return '<option value="'+w[0]+'"'+(whereOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select></div>';
-  if(o){
+function detailHtml(p){
+  var h='';
     h+='<div class="detail"><div class="sec">Care</div><div class="flags">'+[['to_repot','Needs repot'],['to_water','Needs water']].map(function(f){return '<button class="chip'+(p[f[0]]?' on':'')+'" data-t="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('')+'</div>'+
      '<div class="sec">Selling</div><div class="flags">'+[['none','Not selling'],['sale','For sale'],['sold','Sold']].map(function(f){return '<button class="chip'+(sellOf(p)===f[0]?' on':'')+'" data-s="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('')+'</div>'+
      '<div class="grid2"><div><label>Genus</label><input type="text" data-e="genus" data-id="'+p.id+'" value="'+esc(p.genus||'')+'"></div><div><label>Stage</label><input type="text" data-e="purchase_stage" data-id="'+p.id+'" value="'+esc(p.purchase_stage||'')+'"></div>'+
@@ -340,24 +366,29 @@ function plantRow(p,nums){
      '<div><label>Soil</label><input type="text" data-e="soil_medium" data-id="'+p.id+'" value="'+esc(p.soil_medium||'')+'"></div><div><label>Asking price ($)</label><input type="number" step="0.01" data-e="asking_price" data-id="'+p.id+'" value="'+esc(p.asking_price==null?'':p.asking_price)+'"></div></div>'+
      '<label>Notes</label><textarea data-e="notes" data-id="'+p.id+'">'+esc(p.notes||'')+'</textarea>'+
      '<div class="row" style="margin-top:10px"><button class="btn bad" data-del="'+p.id+'">Delete</button></div></div>';
-  }
+  return h;
+}
+function plantRow(p,nums){
+  var o=open[p.id];
+  var h='<div class="plant"><div class="top"><button class="nm" data-open="'+p.id+'"><b>'+esc(p.plant_name)+'</b><small>'+esc(p.plant_id||'')+' · '+nums[p.id]+(p.for_sale&&!p.sold?' · for sale':'')+(p.sold?' · sold':'')+'</small></button>'+
+   '<select class="wsel w-'+whereOf(p)+'" data-w="'+p.id+'">'+WHERE.map(function(w){return '<option value="'+w[0]+'"'+(whereOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select></div>';
+  if(o)h+=detailHtml(p);
   return h+'</div>';
 }
-function shelfView(){
-  if(!plants.length)return '<div class="card"><p class="mut">Nothing on the shelf yet. Add plants and they appear here, grouped by genus.</p></div>';
-  return '<p class="mut">Plants you do not have yet are faded.</p>'+illusShelf(plants,{sub:function(p){return p.shipping?'on its way':(p.seller_name||'')}});
+function shelfView(list){
+  if(!list.length)return '<p class="mut">Nothing matches.</p>';
+  return '<p class="mut">Plants you do not have yet are faded. Tap a plant to edit it.</p>'+illusShelf(list,{edit:1,sub:function(p){return p.shipping?'on its way':(p.seller_name||'')}});
 }
 var sheetSort='plant_name',sheetDir=1;
 var SHEETCOLS=[['plant_id','ID','ro'],['plant_name','Name','t'],['genus','Genus','t'],['seller_name','Seller','t'],['purchase_stage','Stage','t'],['where','Where','w'],['to_repot','Repot','b'],['to_water','Water','b'],['sell','Selling','s'],['purchase_price','Paid $','n'],['soil_medium','Soil','t'],['notes','Notes','t']];
-function sheetView(){
-  if(!plants.length)return '<div class="card"><p class="mut">No plants yet.</p></div>';
-  var list=plants.slice().sort(function(a,b){
+function sheetView(base){
+  var list=base.slice().sort(function(a,b){
     var x=sheetSort==='where'?whereOf(a):sheetSort==='sell'?sellOf(a):a[sheetSort],y=sheetSort==='where'?whereOf(b):sheetSort==='sell'?sellOf(b):b[sheetSort];
     if(x==null||x==='')x=sheetDir>0?'\uffff':'';if(y==null||y==='')y=sheetDir>0?'\uffff':'';
     if(typeof x==='string')x=x.toLowerCase();if(typeof y==='string')y=y.toLowerCase();
     return (x<y?-1:x>y?1:0)*sheetDir;
-  }).filter(passes);
-  var h='<input type="search" id="search" placeholder="Search" value="'+esc(q)+'"><p class="mut">Tap a heading to sort. Tap any cell to edit it.</p><div class="sheetwrap"><table class="sheet"><thead><tr>'+
+  });
+  var h='<p class="mut">Tap a heading to sort. Tap any cell to edit it.</p><div class="sheetwrap"><table class="sheet"><thead><tr>'+
    SHEETCOLS.map(function(c){return '<th data-sort="'+c[0]+'">'+c[1]+(sheetSort===c[0]?(sheetDir>0?' ▲':' ▼'):'')+'</th>'}).join('')+'</tr></thead><tbody>';
   list.forEach(function(p){
     h+='<tr>'+SHEETCOLS.map(function(c){
@@ -503,10 +534,13 @@ var SAMPLES=[
 
 /* ---------- events ---------- */
 document.addEventListener('click',async function(e){
-  var t=e.target.closest('th[data-sort],[data-tab],[data-f],[data-t],[data-s],[data-open],[data-del],[data-a]');if(!t)return;
+  var t=e.target.closest('th[data-sort],[data-view],[data-w2],[data-m],[data-tab],[data-f],[data-t],[data-s],[data-open],[data-del],[data-a]');if(!t)return;
   if(t.dataset.sort){if(sheetSort===t.dataset.sort)sheetDir=-sheetDir;else{sheetSort=t.dataset.sort;sheetDir=1}render();return}
+  if(t.dataset.w2){patchPlant(t.dataset.id,wherePatch(t.dataset.w2));return}
   if(t.dataset.s){patchPlant(t.dataset.id,sellPatch(t.dataset.s));return}
-  if(t.dataset.tab){tab=t.dataset.tab;render();return}
+  if(t.dataset.view){view=t.dataset.view;try{localStorage.setItem('view',view)}catch(x){}render();return}
+  if(t.dataset.m){modalId=t.dataset.m;render();return}
+  if(t.dataset.tab){tab=t.dataset.tab;menuOpen=false;render();window.scrollTo(0,0);return}
   if(t.dataset.f){filter=t.dataset.f;render();return}
   if(t.dataset.open){open[t.dataset.open]=!open[t.dataset.open];render();return}
   if(t.dataset.t){var p=plants.find(function(x){return x.id===t.dataset.id});if(!p)return;patchPlant(p.id,linkPatch(p,t.dataset.t));return}
@@ -517,6 +551,9 @@ document.addEventListener('click',async function(e){
   if(a==='forgot'){authMode='reset';msg='';needResend='';render();return}
   if(a==='resend'){var rr=await sb.auth.resend({type:'signup',email:needResend});msg=rr.error?rr.error.message:'Sent. Check your email for a new confirmation link.';render();return}
   if(a==='out'){await sb.auth.signOut();user=null;plants=[];render();return}
+  if(a==='menu'){menuOpen=!menuOpen;render();return}
+  if(a==='filters'){filtersOpen=!filtersOpen;render();return}
+  if(a==='closem'){if(t.classList.contains('modal')&&e.target!==t)return;modalId=null;render();return}
   if(a==='tpl'){downloadTemplate();return}
   if(a==='pickcols'){pickOpen=!pickOpen;render();return}
   if(a==='dlprint'){downloadPrint();return}
@@ -529,7 +566,7 @@ document.addEventListener('click',async function(e){
     importState.busy=true;render();
     var res=await addPlants(importState.rows);
     if(res.error){importState.busy=false;toast('Import stopped: '+res.error.message+' ('+res.done+' saved)');render();return}
-    toast('Imported '+res.done+' plants');importState=null;tab='inv';render();
+    toast('Imported '+res.done+' plants');importState=null;tab='home';render();
   }
 });
 document.addEventListener('submit',async function(e){
@@ -562,7 +599,7 @@ document.addEventListener('submit',async function(e){
     var w=(document.querySelector('input[name=where]:checked')||{}).value||'received',sl=(document.querySelector('input[name=sell]:checked')||{}).value||'none';
     var row=Object.assign({plant_name:$('#a_name').value.trim(),genus:$('#a_genus').value.trim()||null,purchase_stage:$('#a_stage').value||null,seller_name:$('#a_seller').value.trim()||null,sourced_from:$('#a_src').value.trim()||null,purchase_date:$('#a_date').value||null,purchase_price:toNum($('#a_price').value),soil_medium:$('#a_soil').value.trim()||null,last_watered:$('#a_water').value||null,to_repot:$('#a_repot').checked,to_water:$('#a_towater').checked,asking_price:sl==='sale'?toNum($('#a_ask').value):null,notes:$('#a_notes').value.trim()||null},wherePatch(w),sellPatch(sl));
     var res=await addPlants([row]);
-    if(res.error)toast('Could not add: '+res.error.message);else{toast('Added '+row.plant_name);tab='inv';render()}
+    if(res.error)toast('Could not add: '+res.error.message);else{toast('Added '+row.plant_name);tab='home';render()}
   }
 });
 document.addEventListener('input',function(e){if(e.target.id==='search'){q=e.target.value;render()}});
