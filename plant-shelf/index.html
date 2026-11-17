@@ -127,7 +127,7 @@ var COLS=[
  ['Sold Price ($)','sold_price','num'],['Sold To / Platform','sold_to','text'],['Sale Notes','sale_notes','text']
 ];
 var ALIAS={'Current Temp (°F)':'Current Temp (F)','Inventory Note':'Notes'};
-var STAGES=['TC','Plug','Starter','Established','Large','Tree','Rehab'];
+var STAGES=['TC','Plug','Starter','Established','Large','Tree','Rehab','Corm','Cutting'];
 function stageSel(attrs,cur){var o=STAGES.slice();if(cur&&o.indexOf(cur)<0)o.push(cur);return '<select '+attrs+'><option value="">Stage</option>'+o.map(function(x){return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+(x==='TC'?'TC (tissue culture)':esc(x))+'</option>'}).join('')+'</select>'}
 var theme=(function(){try{var t=localStorage.getItem('theme');if(t)return t}catch(e){}return (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'})();
 document.documentElement.setAttribute('data-theme',theme);
