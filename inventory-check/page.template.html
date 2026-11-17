@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Plant Inventory Check</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: a calm checklist. Sellers are collapsible sections; inside each, plants A to Z with two big toggles (Have it, Labeled). Same linen, moss and sage palette as the shelf. */
+:root{
+  --paper:#ecebe2; --card:#f7f6f0; --card2:#e5e6d9; --ink:#2f3b33; --muted:#697466; --line:rgba(47,59,51,.5);
+  --moss:#4f6b57; --sage:#cdd8c6; --lichen:#cfd0aa; --blush:#e9d6c9; --warn:#8a5a14; --on-moss:#f7f6f0;
+  --display:'Cormorant Garamond',Georgia,serif; --body:'DM Sans','Helvetica Neue',Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1e2520; --card:#29322b; --card2:#323c34; --ink:#e6eadf; --muted:#a3ae9f; --line:rgba(230,234,223,.4);
+  --moss:#8fb59a; --sage:#3a4a3e; --lichen:#4a4f35; --blush:#4a3a33; --warn:#e0b060; --on-moss:#14211a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1e2520; --card:#29322b; --card2:#323c34; --ink:#e6eadf; --muted:#a3ae9f; --line:rgba(230,234,223,.4);
+  --moss:#8fb59a; --sage:#3a4a3e; --lichen:#4a4f35; --blush:#4a3a33; --warn:#e0b060; --on-moss:#14211a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);
+  padding-block:22px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:760px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--moss);outline-offset:3px}
+h1,h2{font-family:var(--display);margin:0;line-height:1.05;text-wrap:balance}
+h1{font-size:clamp(40px,9vw,58px);font-weight:500;font-style:italic;color:var(--moss)}
+.sub{color:var(--muted);margin:6px 0 16px}
+.meter{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.meter .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.bar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden;margin-top:6px;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--moss);width:0;transition:width .25s}
+.big{font-family:var(--display);font-size:30px;font-weight:600;line-height:1}
+.big small{font-family:var(--body);font-size:13px;font-weight:400;color:var(--muted)}
+.lab{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.tools input[type=search]{flex:1 1 220px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 18px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.btn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 15px;font-weight:500;min-height:40px}
+.seg button[aria-pressed=true]{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+.btn.primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss);font-weight:700}
+.btn.small{min-height:34px;padding:5px 12px;font-size:13px}
+.btn.danger{color:var(--warn)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.banner{background:var(--blush);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:14px}
+details.seller{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+details.seller>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;min-height:56px}
+details.seller>summary::-webkit-details-marker{display:none}
+details.seller>summary::before{content:"›";font-size:22px;color:var(--muted);transition:transform .15s;width:14px;flex:none}
+details.seller[open]>summary::before{transform:rotate(90deg)}
+.sname{flex:1;min-width:0}
+.sname h2{font-size:25px;font-weight:600;overflow-wrap:anywhere}
+.sname small{color:var(--muted);font-size:12.5px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:2px 11px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.done{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+.items{border-top:1px solid var(--line)}
+.stg{background:var(--card2);font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--muted);padding:6px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}.stg span{border:1px solid var(--line);border-radius:99px;padding:0 8px;font-weight:500}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.nm{display:block;width:100%;text-align:left;border:0;background:transparent;padding:0;font-family:var(--display);font-size:21px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:12.5px;color:var(--muted)}
+.chip{border:1px solid var(--line);border-radius:999px;padding:0 9px;font-size:12px;color:var(--ink)}
+.chip.flag{background:var(--lichen);border-color:transparent;font-weight:500}
+.chip.new{background:var(--sage);border-color:transparent}
+.togs{display:flex;gap:8px}
+.tog{min-width:76px;min-height:46px;border:1px solid var(--line);background:transparent;border-radius:12px;padding:4px 10px;font-weight:500;line-height:1.15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.tog span{font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+.tog b{font-size:18px;line-height:1;opacity:.35}
+.tog[aria-pressed=true]{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+.tog[aria-pressed=true] b{opacity:1}
+@media(max-width:480px){.item{grid-template-columns:1fr}.togs{width:100%}.tog{flex:1}}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted)}
+.veil{position:fixed;inset:0;background:rgba(25,32,27,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center;overflow-y:auto}
+.sheet{background:var(--card);width:100%;max-width:520px;border:1px solid var(--line);border-radius:18px 18px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));margin-top:max(24px,env(safe-area-inset-top,0px))}
+@media(min-width:600px){.veil{align-items:center;padding:24px}.sheet{border-radius:18px;margin:auto}}
+.sheet h2{font-size:30px;font-weight:600;margin-bottom:12px}
+.f{display:grid;gap:4px;margin-bottom:12px;min-width:0}
+.f label{font-size:13px;font-weight:700;color:var(--muted)}
+.f input,.f select,.f textarea{width:100%;min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.hint{font-size:12px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;z-index:40;font-weight:500;max-width:90vw}
+</style></head>
+<body><div class="wrap">
+<h1>Inventory check</h1>
+<p class="sub" id="sub">Go through your plants seller by seller. Tap Have it when you find it, Labeled when it has its tag. <span style="opacity:.6">(build 15)</span></p>
+<div class="meter" id="meterBox" aria-live="polite">
+  <div class="row2">
+    <div><div class="lab">Have it</div><div class="big" id="nHave">0</div><div class="bar"><i id="bHave"></i></div></div>
+    <div><div class="lab">In shipping</div><div class="big" id="nShip">0</div></div>
+    <div><div class="lab">Labeled</div><div class="big" id="nLab">0</div><div class="bar"><i id="bLab"></i></div></div>
+  </div>
+</div>
+<div class="seg" id="tabs" role="group" aria-label="View" style="margin-bottom:12px"><button type="button" data-t="s" aria-pressed="true">By seller</button><button type="button" data-t="m" aria-pressed="false">Labeled, seller unknown <span id="mc"></span></button><button type="button" data-t="r" aria-pressed="false">Repots <span id="rc"></span></button></div>
+<div id="banner"></div>
+<div class="tools" id="toolsBox">
+  <input type="search" id="q" placeholder="Search name, seller or tag" aria-label="Search">
+</div>
+<div class="seg" id="filters" role="group" aria-label="Show">
+  <button type="button" data-f="all" aria-pressed="true">All</button>
+  <button type="button" data-f="tofind" aria-pressed="false">Still to find</button>
+  <button type="button" data-f="nolabel" aria-pressed="false">Not labeled</button>
+  <button type="button" data-f="done" aria-pressed="false">Done</button>
+  <button type="button" data-f="ship" aria-pressed="false">In shipping</button>
+</div>
+<div class="acts" id="actsBox" style="margin-top:12px">
+  <button class="btn primary" type="button" id="add">+ Add a plant</button>
+  <button class="btn" type="button" id="collapse">Collapse all</button>
+  <button class="btn" type="button" id="expand">Expand all</button>
+</div>
+<main id="list"></main>
+</div>
+<div id="layer"></div>
+<script>
+if(window.__plantInv){throw new Error('already running')}window.__plantInv=1;
+var BASE=__DATA__;
+var STAGES=['','TC','Plug','Starter','Established','Juvenile','Cutting','Corm','Tree'];
+var $=function(i){return document.getElementById(i)};
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+var tab='s',col=null,state={},filter='all',q='',openMap={},chains={},inflight={},local={},LS='plantinv.v1',dbOn=false;
+/* ---------- storage ---------- */
+function lsLoad(){try{var s=JSON.parse(localStorage.getItem(LS)||'null');if(s)state=s}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){}}
+function put(id,patch){
+  if(!col){lsSave();return}
+  var p=JSON.parse(JSON.stringify(patch||state[id]||{}));
+  inflight[id]=(inflight[id]||0)+1;
+  chains[id]=(chains[id]||Promise.resolve()).then(async function(){
+    var cur={};
+    try{var sn=await col.doc(id).get();var ex=typeof sn.exists==='function'?sn.exists():sn.exists;if(sn&&ex!==false&&sn.data)cur=sn.data()||{}}catch(e){cur=JSON.parse(JSON.stringify(state[id]||{}))}
+    var out=Object.assign({},cur,p);
+    return col.doc(id).set(out);
+  }).catch(function(e){toast('Could not save: '+(e&&e.message||'try again'))}).then(function(){inflight[id]--});
+}
+function drop(id){
+  delete state[id];
+  if(!col){lsSave();return}
+  local[id]=null;inflight[id]=(inflight[id]||0)+1;
+  chains[id]=(chains[id]||Promise.resolve()).then(function(){return col.doc(id).delete()}).catch(function(){toast('Could not remove it. Try again.')}).then(function(){inflight[id]--});
+}
+/* ---------- model ---------- */
+function items(){
+  var out=BASE.map(function(p){
+    var o=state[p.t]||{};
+    return{id:p.t,base:true,tag:p.t,name:o.name!=null?o.name:p.n,seller:o.seller!=null?o.seller:p.s,src:p.src,stage:o.stage!=null?o.stage:p.st,
+      note:o.note!=null?o.note:p.nt,o:p.o,tot:p.tot,have:!!o.have,lab:!!o.labeled,ship:!!o.shipping,repot:!!o.repot,repotted:!!o.repotted}});
+  Object.keys(state).forEach(function(id){var o=state[id];if(o&&o.added)out.push({id:id,base:false,mystery:!!o.mystery,rOnly:!!o.repotOnly,repot:!!o.repot,repotted:!!o.repotted,tag:'',name:o.name||'',seller:o.mystery?'':(o.seller||'Unknown seller'),src:o.src||'',stage:o.stage||'',note:o.note||'',have:!!o.have,lab:!!o.labeled,ship:!!o.shipping})});
+  return out;
+}
+var ORDER=['TC','Plug','Starter','Cutting','Juvenile','Established','Corm','Tree'];
+function stageRank(s){if(s==='TC?')return .5;var i=ORDER.indexOf(s);if(i>=0)return i;if(!s)return 98;return 50}
+function sKey(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function sellers(list){
+  var m={};
+  list.forEach(function(it){var k=sKey(it.seller)||'unknown';
+    if(!m[k])m[k]={key:k,name:it.seller||'Unknown seller',src:{},items:[]};
+    var g=m[k];if((it.seller||'').split(' ').length>g.name.split(' ').length)g.name=it.seller;
+    if(it.src)g.src[it.src]=1;g.items.push(it)});
+  var arr=Object.keys(m).map(function(k){return m[k]});
+  arr.sort(function(a,b){return a.name.toLowerCase().localeCompare(b.name.toLowerCase())});
+  arr.forEach(function(g){g.items.sort(function(a,b){return stageRank(a.stage)-stageRank(b.stage)||(a.name||'~').toLowerCase().localeCompare((b.name||'~').toLowerCase(),undefined,{numeric:true})||String(a.tag).localeCompare(String(b.tag))})});
+  return arr;
+}
+function pass(it){
+  if(filter==='ship')return it.ship;
+  if(filter==='tofind'&&(it.have||it.ship))return false;
+  if(filter==='nolabel'&&(it.lab||it.ship))return false;
+  if(filter==='done'&&!((it.have||it.ship)&&(it.lab||it.ship)))return false;
+  if(q){var s=(it.name+' '+it.seller+' '+it.tag+' '+it.note+' '+it.stage).toLowerCase();if(s.indexOf(q)<0)return false}
+  return true;
+}
+/* ---------- render ---------- */
+function render(){
+  var every=items(),all=every.filter(function(i){return !i.mystery&&!i.rOnly}),rl=every.filter(function(i){return i.repot||i.rOnly}),myst=every.filter(function(i){return i.mystery}),n=all.length,h=all.filter(function(i){return i.have||i.ship}).length,l=all.filter(function(i){return i.lab||i.ship}).length;
+  $('nHave').innerHTML=h+' <small>of '+n+'</small>';$('nLab').innerHTML=l+' <small>of '+n+'</small>';
+  $('nShip').innerHTML=all.filter(function(i){return i.ship}).length+' <small>counted, on the way</small>';
+  $('bHave').style.width=(n?h/n*100:0)+'%';$('bLab').style.width=(n?l/n*100:0)+'%';
+  $('mc').textContent=myst.length?'('+myst.length+')':'';
+  [].forEach.call(document.querySelectorAll('#tabs button'),function(x){x.setAttribute('aria-pressed',x.dataset.t===tab)});
+  var ropen=rl.filter(function(i){return i.rOnly||!i.repotted}).length;$('rc').textContent=rl.length?'('+ropen+')':'';
+  ['meterBox','toolsBox','filters','actsBox'].forEach(function(i){$(i).style.display=tab==='s'?'':'none'});
+  if(tab==='r'){
+    rl.sort(function(a,b){return (a.rOnly-b.rOnly)||(a.repotted-b.repotted)||(a.name||'~').toLowerCase().localeCompare((b.name||'~').toLowerCase())});
+    var rh='<p class="sub">Plants to repot, and plants that need something else added. Tap Repotted when it is done. To flag any plant for a repot, open it on the By seller tab and tick Needs a repot.</p><div class="acts"><button class="btn primary" type="button" data-a="addr">+ Add a line</button></div>';
+    if(!rl.length)rh+='<div class="empty">Nothing flagged yet.</div>';
+    else{rh+='<div class="items" style="background:var(--card);border:1px solid var(--line);border-radius:14px">';
+      rl.forEach(function(it){rh+='<div class="item"><div><button class="nm" type="button" data-a="edit" data-id="'+esc(it.id)+'">'+esc(it.name||'(no name)')+'</button><div class="meta">'+(it.seller?'<span>'+esc(it.seller)+'</span>':'')+(it.tag?'<span>'+esc(it.tag)+'</span>':'')+(it.note?'<span>'+esc(it.note)+'</span>':'')+'</div></div>'+(it.rOnly?'':'<div class="togs"><button class="tog" type="button" aria-pressed="'+it.repotted+'" data-a="rep" data-id="'+esc(it.id)+'"><b>✓</b><span>Repotted</span></button></div>')+'</div>'});
+      rh+='</div>'}
+    $('list').innerHTML=rh;return;
+  }
+  if(tab==='m'){
+    myst.sort(function(a,b){return (a.name||'~').toLowerCase().localeCompare((b.name||'~').toLowerCase())});
+    var mh='<p class="sub">Plants you can see are labeled, but you do not know who they came from. Add the name from the label. When you work out the seller, open the plant and fill it in, and it moves to that seller.</p><div class="acts"><button class="btn primary" type="button" data-a="addm">+ Add a plant</button></div>';
+    if(!myst.length)mh+='<div class="empty">Nothing here yet.</div>';
+    else{mh+='<div class="items" style="background:var(--card);border:1px solid var(--line);border-radius:14px">';
+      myst.forEach(function(it){mh+='<div class="item"><div><button class="nm" type="button" data-a="edit" data-id="'+esc(it.id)+'">'+esc(it.name||'(no name)')+'</button><div class="meta">'+(it.stage?'<span class="chip">'+esc(it.stage)+'</span>':'')+(it.note?'<span>'+esc(it.note)+'</span>':'')+'</div></div></div>'});
+      mh+='</div>'}
+    $('list').innerHTML=mh;return;
+  }
+  var html='';
+  sellers(all).forEach(function(g){
+    var vis=g.items.filter(pass);if(!vis.length)return;
+    var gh=g.items.filter(function(i){return i.have||i.ship}).length,gl=g.items.filter(function(i){return i.lab||i.ship}).length,full=gh===g.items.length&&gl===g.items.length;
+    var op=openMap[g.key]!==undefined?openMap[g.key]:(!full||filter!=='all'||!!q);
+    html+='<details class="seller" data-k="'+esc(g.key)+'"'+(op?' open':'')+'><summary><span class="sname"><h2>'+esc(g.name)+'</h2><small>'+esc(Object.keys(g.src).join(', ')||'source not set')+'</small></span><span class="pill'+(full?' done':'')+'">'+gh+'/'+g.items.length+(full?' ✓':'')+'</span></summary><div class="items">';
+    var lastSt=null;
+    vis.forEach(function(it){
+      var sg=it.stage||'Stage not set';
+      if(sg!==lastSt){lastSt=sg;var cnt=vis.filter(function(x){return (x.stage||'Stage not set')===sg}).length;
+        html+='<div class="stg">'+esc(sg)+' <span>'+cnt+'</span></div>'}
+      var flag=/^orange$/i.test(it.name)||!it.name;
+      html+='<div class="item"><div><button class="nm" type="button" data-a="edit" data-id="'+esc(it.id)+'">'+esc(it.name||'(no name yet)')+'</button><div class="meta">'+
+        
+        (it.tag?'<span>'+esc(it.tag)+'</span>':'<span class="chip new">added here</span>')+
+        (it.tot>1?'<span>#'+it.o+' of '+it.tot+' overall</span>':'')+
+        (flag?'<span class="chip flag">needs its real name</span>':'')+
+        (it.note?'<span>'+esc(it.note)+'</span>':'')+'</div></div>'+
+        '<div class="togs"><button class="tog" type="button" aria-pressed="'+it.have+'" data-a="have" data-id="'+esc(it.id)+'"><b>✓</b><span>Have it</span></button>'+
+        '<button class="tog" type="button" aria-pressed="'+it.lab+'" data-a="lab" data-id="'+esc(it.id)+'"><b>✓</b><span>Labeled</span></button>'+
+        '<button class="tog" type="button" aria-pressed="'+it.ship+'" data-a="ship" data-id="'+esc(it.id)+'"><b>&#9992;</b><span>Shipping</span></button></div></div>';
+    });
+    html+='<div style="padding:10px 14px"><button class="btn small" type="button" data-a="all" data-k="'+esc(g.key)+'">Mark all here as Have it</button></div></div></details>';
+  });
+  $('list').innerHTML=html||'<div class="empty">Nothing matches. Try another filter or search.</div>';
+}
+/* ---------- actions ---------- */
+function stateFor(id){if(!state[id])state[id]={};return state[id]}
+function toggle(id,field,cur){var o=stateFor(id);o[field]=!cur;var pp={};pp[field]=!cur;put(id,pp);render()}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-a],[data-f],[data-t]');if(!b)return;
+  if(b.dataset.t){tab=b.dataset.t;render();window.scrollTo(0,0);return}
+  if(b.dataset.f){filter=b.dataset.f;[].forEach.call(document.querySelectorAll('#filters button'),function(x){x.setAttribute('aria-pressed',x===b)});render();return}
+  var a=b.dataset.a,id=b.dataset.id;
+  if(a==='have'||a==='lab'||a==='ship'||a==='rep'){var ck=a+id,nw=Date.now();if(window.__lc&&window.__lc.k===ck&&nw-window.__lc.t<700)return;window.__lc={k:ck,t:nw}}
+  if(a==='have')toggle(id,'have',b.getAttribute('aria-pressed')==='true');
+  else if(a==='lab')toggle(id,'labeled',b.getAttribute('aria-pressed')==='true');
+  else if(a==='ship'){var cur=b.getAttribute('aria-pressed')==='true',o=stateFor(id);o.shipping=!cur;put(id,{shipping:!cur});render()}
+  else if(a==='edit')openForm(id);
+  else if(a==='addm')openForm(null,true);
+  else if(a==='addr')openForm(null,'r');
+  else if(a==='rep'){var rc=b.getAttribute('aria-pressed')==='true';stateFor(id).repotted=!rc;put(id,{repotted:!rc});render()}
+  else if(a==='all'){var k=b.dataset.k;sellers(items()).forEach(function(g){if(g.key===k)g.items.forEach(function(it){if(!it.have){stateFor(it.id).have=true;put(it.id,{have:true})}})});render()}
+});
+document.addEventListener('toggle',function(e){var d=e.target;if(d.classList&&d.classList.contains('seller'))openMap[d.dataset.k]=d.open},true);
+$('q').oninput=function(){q=this.value.trim().toLowerCase();render()};
+$('add').onclick=function(){openForm(null)};
+$('collapse').onclick=function(){sellers(items()).forEach(function(g){openMap[g.key]=false});render()};
+$('expand').onclick=function(){sellers(items()).forEach(function(g){openMap[g.key]=true});render()};
+/* ---------- add / edit ---------- */
+function closeLayer(){$('layer').innerHTML=''}
+function openForm(id,addMystery){
+  var addR=addMystery==='r';if(addR)addMystery=false;
+  var all=items(),it=id?all.filter(function(x){return x.id===id})[0]:null,edit=!!it;
+  var names=sellers(all.filter(function(i){return !i.mystery})).map(function(g){return g.name});['Unknown seller','Freebie'].forEach(function(x){if(names.indexOf(x)<0)names.push(x)});
+  it=it||{name:'',seller:'',stage:'',note:'',tag:'',base:false};
+  var my=!!addMystery||!!it.mystery;
+  $('layer').innerHTML='<div class="veil" id="veil"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+(edit?'Edit plant':'Add a plant')+'"><h2>'+(edit?'Edit this plant':'Add a plant')+'</h2><form id="f">'+
+   '<div class="f"><label for="fn">Plant name</label><input id="fn" value="'+esc(it.name)+'" autocomplete="off" placeholder="e.g. Al. Black Velvet"><span class="hint">Leave out TC or Plug. Use the stage below.</span></div>'+
+   ((addMystery||addR)?'':'<div class="f"><label for="fs">'+(my?'Who it is from (leave empty if still unknown)':'Who it is from')+'</label><input id="fs" list="sl" value="'+esc(it.seller)+'" autocomplete="off" placeholder="Seller or where you got it"><datalist id="sl">'+names.map(function(n){return'<option value="'+esc(n)+'">'}).join('')+'</datalist></div>')+
+   '<div class="f"><label for="ft">Stage</label><select id="ft">'+STAGES.map(function(s){return'<option value="'+s+'"'+(s===it.stage?' selected':'')+'>'+(s||'Not set')+'</option>'}).join('')+'</select></div>'+
+   ((addMystery||addR)?'':'<div class="f"><label class="chk"><input type="checkbox" id="fr" style="width:auto"'+(it.repot?' checked':'')+'> Needs a repot</label></div>')+'<div class="f"><label for="fo">Note</label><input id="fo" value="'+esc(it.note)+'" placeholder="Freebie, no label, I have two..." autocomplete="off"></div>'+
+   '<div class="btns"><button class="btn primary" type="submit">'+(edit?'Save':'Add to list')+'</button><button class="btn" type="button" id="fc">Cancel</button>'+
+   (edit?'<button class="btn" type="button" id="fd">Add another of this</button>':'')+(edit&&!it.base?'<button class="btn danger" type="button" id="fx">Remove</button>':'')+'</div></form></div></div>';
+  $('veil').addEventListener('click',function(e){if(e.target===$('veil'))closeLayer()});
+  $('fc').onclick=closeLayer;
+  setTimeout(function(){$('fn').focus()},50);
+  if($('fd'))$('fd').onclick=function(){dupe(it)};
+  if($('fx'))$('fx').onclick=function(){drop(id);closeLayer();render();toast('Removed')};
+  $('f').onsubmit=function(ev){
+    ev.preventDefault();
+    var nm=$('fn').value.trim(),sl=$('fs')?$('fs').value.trim():'';if(!my)sl=sl||'Unknown seller';var sv=sl,st=$('ft').value,nt=$('fo').value.trim();
+    if(!nm){$('fn').focus();toast('Give it a name first');return}
+    if(!edit){var nid='n-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      state[nid]={added:true,name:nm,seller:addR?'':sl,stage:st,note:nt,have:true,labeled:!!addMystery,created:new Date().toISOString()};if(addMystery)state[nid].mystery=true;if(addR)state[nid].repotOnly=true;put(nid);toast('Added')}
+    else{var o=stateFor(id),b=BASE.filter(function(p){return p.t===id})[0];
+      o.name=nm;o.seller=sl;o.stage=st;o.note=nt;var mf=!!(my&&!sl);if(!b){o.mystery=mf}
+      var pt={name:nm,seller:sl,stage:st,note:nt};if(!b)pt.mystery=mf;if($('fr')){pt.repot=$('fr').checked;o.repot=pt.repot}put(id,pt);toast(mf?'Saved':(my?'Saved. Moved to '+sl:'Saved'))}
+    closeLayer();render();
+  };
+}
+function dupe(it){
+  var nid='n-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  state[nid]={added:true,name:$('fn').value.trim()||it.name,seller:$('fs').value.trim()||it.seller,stage:$('ft').value,note:'second one'+(it.tag?' (like '+it.tag+')':''),have:false,labeled:false,created:new Date().toISOString()};
+  put(nid);closeLayer();render();toast('Added a second one. Check it off when you find it.');
+}
+var tt;function toast(m){var d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);clearTimeout(tt);tt=setTimeout(function(){d.remove()},2400)}
+/* ---------- start ---------- */
+render();
+(async function(){
+  var db=null;
+  try{if(window.claude&&claude.use)db=await claude.use('db')}catch(e){db=null}
+  if(!db){lsLoad();render();$('banner').innerHTML='<div class="banner">Saving to your account is off in this view. Your check-offs are kept in this browser only. Open the page from your artifacts to save them for good.</div>';return}
+  dbOn=true;col=db.collection('inv2');
+  var timer=setTimeout(function(){$('banner').innerHTML='<div class="banner">Still reaching your saved check-offs. What you see may be out of date.</div>'},10000);
+  var first=true;
+  col.onSnapshot(function(snap){
+    if(!first)return;if(snap.metadata&&snap.metadata.fromCache&&!snap.docs.length)return;first=false;
+    clearTimeout(timer);$('banner').innerHTML='';
+    var s={};snap.docs.forEach(function(d){s[d.id]=d.data()});state=s;render();
+  },function(){clearTimeout(timer);$('banner').innerHTML='<div class="banner">Could not load saved check-offs. Reload the page to try again.</div>'});
+})();
+</script></body></html>
