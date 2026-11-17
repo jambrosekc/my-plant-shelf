@@ -56,6 +56,8 @@ textarea{min-height:64px}
 .pot em{display:block;font-style:normal;color:var(--mut);font-size:11px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;max-width:90%}
 .mut{color:var(--mut)}
+.msgbox{margin-top:14px;padding:10px 12px;border-radius:10px;background:#f3d9d3;color:var(--bad)}
+.msgbox.ok{background:var(--sage-l);color:var(--sage-d)}
 .err{color:var(--bad)}
 .ok{color:var(--sage-d)}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -94,7 +96,7 @@ var ALIAS={'Current Temp (°F)':'Current Temp (F)','Inventory Note':'Notes'};
 var STAGES=['TC','Plug','Starter','Established','Juvenile','Corm','Cutting','Tree'];
 
 /* ---------- state ---------- */
-var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',open={},msg='',importState=null,authMode='in';
+var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',open={},msg='',importState=null,authMode='in',recovery=false,needResend='';
 
 function $(s,r){return (r||document).querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -159,6 +161,7 @@ function stageRank(s){var i=STAGES.indexOf(s);return i<0?99:i}
 /* ---------- views ---------- */
 function render(){
   var app=$('#app');
+  if(recovery){app.innerHTML=recoveryView();return}
   if(!user){app.innerHTML=authView();return}
   var h='<div class="hdr"><div><h1>'+esc(shelfName)+'</h1><small>'+esc(user.email)+'</small></div><button class="link" data-a="out">Sign out</button></div>';
   h+='<div class="tabs">'+[['inv','Inventory'],['shelf','Shelf'],['add','Add'],['imp','Import']].map(function(t){return '<button class="tab'+(tab===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
@@ -168,15 +171,28 @@ function render(){
   app.innerHTML=h;
   if(keep){var e=$('#search');if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(x){}}}
 }
+function msgBox(){
+  if(!msg)return '';
+  var good=msg.indexOf('Check your email')===0||msg.indexOf('Password updated')===0||msg.indexOf('Sent')===0;
+  return '<div id="amsg" class="msgbox'+(good?' ok':'')+'">'+esc(msg)+'</div>';
+}
 function authView(){
+  var head='<div class="wrap"><div class="card" style="margin-top:8vh"><h2>My Plant Shelf</h2><p class="mut">Keep track of every plant: what you have, what is labeled, what is still on its way.</p>';
+  if(authMode==='reset'){
+    return head+'<form id="resetf"><label>Your email</label><input type="email" id="em" autocomplete="email" required><div class="row" style="margin-top:14px"><button class="btn" type="submit">Send reset link</button><button class="link" type="button" data-a="mode-in">Back to sign in</button></div></form>'+msgBox()+'</div></div>';
+  }
   var up=authMode==='up';
-  return '<div class="wrap"><div class="card" style="margin-top:8vh"><h2>My Plant Shelf</h2><p class="mut">Keep track of every plant: what you have, what is labeled, what is still on its way.</p>'+
+  return head+
    '<form id="authf"><label>Email</label><input type="email" id="em" autocomplete="email" required>'+
    '<label>Password</label><input type="password" id="pw" autocomplete="'+(up?'new-password':'current-password')+'" minlength="6" required>'+
    (up?'<label>Name your shelf</label><input type="text" id="shn" placeholder="Rare Plant Plug">':'')+
    '<div class="row" style="margin-top:14px"><button class="btn" type="submit">'+(up?'Create account':'Sign in')+'</button>'+
-   '<button class="link" type="button" data-a="mode">'+(up?'I already have an account':'Create an account')+'</button></div></form>'+
-   '<p id="amsg" class="'+(msg.indexOf('Check')===0?'ok':'err')+'">'+esc(msg)+'</p></div></div>';
+   '<button class="link" type="button" data-a="mode" style="color:var(--sage-d)">'+(up?'I already have an account':'Create an account')+'</button></div>'+
+   (up?'':'<div style="margin-top:10px"><button class="link" type="button" data-a="forgot" style="color:var(--sage-d)">Forgot password?</button></div>')+'</form>'+
+   msgBox()+(needResend?'<div class="row" style="margin-top:10px"><button class="btn alt" data-a="resend">Resend confirmation email</button></div>':'')+'</div></div>';
+}
+function recoveryView(){
+  return '<div class="wrap"><div class="card" style="margin-top:8vh"><h2>Choose a new password</h2><form id="recf"><label>New password</label><input type="password" id="npw" minlength="6" autocomplete="new-password" required><div class="row" style="margin-top:14px"><button class="btn" type="submit">Save password</button></div></form>'+msgBox()+'</div></div>';
 }
 function invView(){
   var nums=labelNums();
@@ -311,7 +327,10 @@ document.addEventListener('click',async function(e){
   if(t.dataset.t){var p=plants.find(function(x){return x.id===t.dataset.id});if(!p)return;var k=t.dataset.t,patch={};patch[k]=!p[k];patchPlant(p.id,patch);return}
   if(t.dataset.del){if(confirm('Delete this plant?'))removePlant(t.dataset.del);return}
   var a=t.dataset.a;
-  if(a==='mode'){authMode=authMode==='in'?'up':'in';msg='';render();return}
+  if(a==='mode'){authMode=authMode==='in'?'up':'in';msg='';needResend='';render();return}
+  if(a==='mode-in'){authMode='in';msg='';render();return}
+  if(a==='forgot'){authMode='reset';msg='';needResend='';render();return}
+  if(a==='resend'){var rr=await sb.auth.resend({type:'signup',email:needResend});msg=rr.error?rr.error.message:'Sent. Check your email for a new confirmation link.';render();return}
   if(a==='out'){await sb.auth.signOut();user=null;plants=[];render();return}
   if(a==='tpl'){downloadTemplate();return}
   if(a==='sample'){var r=await addPlants(SAMPLES);if(r.error)toast('Could not add: '+r.error.message);else{toast('Added '+r.done+' sample plants');render()}return}
@@ -330,10 +349,25 @@ document.addEventListener('submit',async function(e){
     var r;
     if(authMode==='up')r=await sb.auth.signUp({email:em,password:pw,options:{data:{shelf_name:($('#shn').value||'').trim()||'My Shelf'}}});
     else r=await sb.auth.signInWithPassword({email:em,password:pw});
-    if(r.error){msg=r.error.message;render();return}
-    if(!r.data.session){msg='Check your email to confirm your account, then sign in.';authMode='in';render();return}
+    if(r.error){
+      var m=r.error.message||'Something went wrong';
+      needResend='';
+      if(/not confirmed/i.test(m)){msg='That email is not confirmed yet. Check your inbox (and spam) for the confirmation link, or send a new one.';needResend=em}
+      else if(/invalid login/i.test(m))msg='That email or password is not right. If you forgot your password, use Forgot password below.';
+      else msg=m;
+      render();return}
+    if(!r.data.session){msg='Check your email to confirm your account. Then come back here and sign in.';authMode='in';needResend=em;render();return}
     await boot(r.data.session);
   }
+  if(e.target.id==='resetf'){
+    var rem=$('#em').value.trim();
+    var rr2=await sb.auth.resetPasswordForEmail(rem,{redirectTo:location.origin+location.pathname});
+    msg=rr2.error?rr2.error.message:'Check your email for a link to reset your password.';render();return}
+  if(e.target.id==='recf'){
+    var ur=await sb.auth.updateUser({password:$('#npw').value});
+    if(ur.error){msg=ur.error.message;render();return}
+    recovery=false;msg='Password updated.';
+    var gs=await sb.auth.getSession();await boot(gs.data&&gs.data.session);toast('Password updated');return}
   if(e.target.id==='addf'){
     var row={plant_name:$('#a_name').value.trim(),genus:$('#a_genus').value.trim()||null,purchase_stage:$('#a_stage').value||null,seller_name:$('#a_seller').value.trim()||null,sourced_from:$('#a_src').value.trim()||null,purchase_date:$('#a_date').value||null,purchase_price:toNum($('#a_price').value),have_it:$('#a_have').checked,shipping:$('#a_ship').checked,notes:$('#a_notes').value.trim()||null};
     var res=await addPlants([row]);
@@ -359,7 +393,7 @@ async function boot(session){
 }
 (async function(){
   sb=window.__sb||supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  sb.auth.onAuthStateChange(function(ev,session){if(ev==='SIGNED_OUT'){user=null;plants=[];render()}});
+  sb.auth.onAuthStateChange(function(ev,session){if(ev==='PASSWORD_RECOVERY'){recovery=true;render()}if(ev==='SIGNED_OUT'){user=null;plants=[];render()}});
   var r=await sb.auth.getSession();
   await boot(r.data&&r.data.session);
 })();
