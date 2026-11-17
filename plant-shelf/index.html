@@ -56,6 +56,7 @@ textarea{min-height:64px}
 .pot em{display:block;font-style:normal;color:var(--mut);font-size:11px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;max-width:90%}
 .mut{color:var(--mut)}
+.card.good{border:2px solid var(--sage);box-shadow:0 0 0 5px rgba(95,138,106,.28)}
 .msgbox{margin-top:14px;padding:10px 12px;border-radius:10px;background:#f3d9d3;color:var(--bad)}
 .msgbox.ok{background:var(--sage-l);color:var(--sage-d)}
 .err{color:var(--bad)}
@@ -171,13 +172,14 @@ function render(){
   app.innerHTML=h;
   if(keep){var e=$('#search');if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(x){}}}
 }
+function isGood(){return msg.indexOf('Account created')===0||msg.indexOf('Check your email')===0||msg.indexOf('Password updated')===0||msg.indexOf('Sent')===0}
 function msgBox(){
   if(!msg)return '';
-  var good=msg.indexOf('Check your email')===0||msg.indexOf('Password updated')===0||msg.indexOf('Sent')===0;
+  var good=isGood();
   return '<div id="amsg" class="msgbox'+(good?' ok':'')+'">'+esc(msg)+'</div>';
 }
 function authView(){
-  var head='<div class="wrap"><div class="card" style="margin-top:8vh"><h2>My Plant Shelf</h2><p class="mut">Keep track of every plant: what you have, what is labeled, what is still on its way.</p>';
+  var head='<div class="wrap"><div class="card'+(isGood()?' good':'')+'" style="margin-top:8vh"><h2>My Plant Shelf</h2><p class="mut">Keep track of every plant: what you have, what is labeled, what is still on its way.</p>';
   if(authMode==='reset'){
     return head+'<form id="resetf"><label>Your email</label><input type="email" id="em" autocomplete="email" required><div class="row" style="margin-top:14px"><button class="btn" type="submit">Send reset link</button><button class="link" type="button" data-a="mode-in">Back to sign in</button></div></form>'+msgBox()+'</div></div>';
   }
@@ -356,7 +358,7 @@ document.addEventListener('submit',async function(e){
       else if(/invalid login/i.test(m))msg='That email or password is not right. If you forgot your password, use Forgot password below.';
       else msg=m;
       render();return}
-    if(!r.data.session){msg='Check your email to confirm your account. Then come back here and sign in.';authMode='in';needResend=em;render();return}
+    if(!r.data.session){msg='Account created! Check your email to confirm your account, then come back here and sign in.';authMode='in';needResend=em;render();return}
     await boot(r.data.session);
   }
   if(e.target.id==='resetf'){
