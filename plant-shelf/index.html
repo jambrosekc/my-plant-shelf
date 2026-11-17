@@ -131,7 +131,7 @@ var STAGES=['TC','Plug','Starter','Established','Large','Tree','Rehab','Corm','C
 function stageSel(attrs,cur){var o=STAGES.slice();if(cur&&o.indexOf(cur)<0)o.push(cur);return '<select '+attrs+'><option value="">Stage</option>'+o.map(function(x){return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+(x==='TC'?'TC (tissue culture)':esc(x))+'</option>'}).join('')+'</select>'}
 var theme=(function(){try{var t=localStorage.getItem('theme');if(t)return t}catch(e){}return (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'})();
 document.documentElement.setAttribute('data-theme',theme);
-var gmode='genus',gsel=null,sortBy='name',modalEdit=false,sheetEdit=false;
+var groupBy='seller',gmode='genus',gsel=null,sortBy='name',modalEdit=false,sheetEdit=false;
 var LIGHTS='<svg class="lights" viewBox="0 0 640 60" aria-hidden="true"><defs><radialGradient id="halo2"><stop offset="0" stop-color="#ffe7a0" stop-opacity=".95"/><stop offset="1" stop-color="#ffe7a0" stop-opacity="0"/></radialGradient></defs><g class="strand"><path d="M0 8 C60 26 130 40 210 30 S350 4 430 8 S580 30 640 22" fill="none" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1.1"/><g class="bulb" transform="translate(46,24)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:0.0s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(106,33)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:0.6s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#dfe9d4" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(170,36)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:1.1s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f2dcd0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(236,30)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:1.7s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(300,20)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:2.2s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#e6ecc9" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(364,13)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:2.8s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(428,12)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:3.3s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#dfe9d4" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(492,18)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:3.9s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f2dcd0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(556,25)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:4.4s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(612,30)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:5.0s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#e6ecc9" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g></g></svg>';
 
 /* ---------- state ---------- */
@@ -426,19 +426,41 @@ function listView(list){
   var h='<div class="card"><div class="stats">'+st(tot,'Plants')+st(hv,'Have it')+st(c.ship,'Shipping')+st(c.missing,"Can't find")+'</div><p class="mut" style="margin:6px 0 10px;text-align:center;font-size:12px">Have it + Shipping + Can\'t find = Plants</p>'+
    '<div class="stats" style="grid-template-columns:repeat(3,1fr)">'+st(c.labeled,'Labeled')+st(c.print,'Needs label')+st(c.received,'No label yet')+'</div><p class="mut" style="margin:6px 0 0;text-align:center;font-size:12px">Of the ones you have</p></div>';
   if(!tot){h+='<div class="card"><h3>Your shelf is empty</h3><p class="mut">Add a plant, import a spreadsheet, or load a few sample plants to look around.</p><div class="row"><button class="btn" data-tab="add">Add a plant</button><button class="btn alt" data-tab="imp">Import Excel</button><button class="btn alt" data-a="sample">Load samples</button></div></div>';return h}
-  var bySeller={};
-  list.forEach(function(p){var s=p.seller_name||'Seller not set';(bySeller[s]=bySeller[s]||[]).push(p)});
-  var sellers=Object.keys(bySeller).sort(function(a,b){return a==='Seller not set'?1:b==='Seller not set'?-1:a.toLowerCase()<b.toLowerCase()?-1:1});
+  h+='<div class="ctl"><select id="groupsel">'+[['seller','Group by: seller'],['stage','Group by: stage'],['status','Group by: status'],['label','Group by: label printed or not']].map(function(o){return '<option value="'+o[0]+'"'+(groupBy===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></div>';
   if(!list.length)h+='<p class="mut">Nothing matches.</p>';
-  sellers.forEach(function(s){
-    var arr=bySeller[s];
-    h+='<div class="seller"><span>'+esc(s)+'</span><span class="mut">'+arr.filter(haveish).length+' / '+arr.length+'</span></div>';
-    var stages={};arr.forEach(function(p){var g=p.purchase_stage||'Stage not set';(stages[g]=stages[g]||[]).push(p)});
-    Object.keys(stages).sort(function(a,b){return stageRank(a)-stageRank(b)||(a<b?-1:1)}).forEach(function(g){
-      h+='<div class="stage">'+esc(g)+'</div>';
-      stages[g].sort(function(a,b){return (a.plant_name||'').toLowerCase()<(b.plant_name||'').toLowerCase()?-1:1}).forEach(function(p){h+=plantRow(p,nums)});
+  function byName(a,b){return (a.plant_name||'').toLowerCase()<(b.plant_name||'').toLowerCase()?-1:1}
+  function section(title,arr,sub){h+='<div class="seller"><span>'+esc(title)+'</span><span class="mut">'+arr.length+(sub||'')+'</span></div>';arr.sort(byName).forEach(function(p){h+=plantRow(p,nums)})}
+  if(groupBy==='seller'){
+    var bySeller={};
+    list.forEach(function(p){var s=p.seller_name||'Seller not set';(bySeller[s]=bySeller[s]||[]).push(p)});
+    var sellers=Object.keys(bySeller).sort(function(a,b){return a==='Seller not set'?1:b==='Seller not set'?-1:a.toLowerCase()<b.toLowerCase()?-1:1});
+    sellers.forEach(function(s){
+      var arr=bySeller[s];
+      h+='<div class="seller"><span>'+esc(s)+'</span><span class="mut">'+arr.filter(haveish).length+' / '+arr.length+'</span></div>';
+      var stages={};arr.forEach(function(p){var g=p.purchase_stage||'Stage not set';(stages[g]=stages[g]||[]).push(p)});
+      Object.keys(stages).sort(function(a,b){return stageRank(a)-stageRank(b)||(a<b?-1:1)}).forEach(function(g){
+        h+='<div class="stage">'+esc(g)+'</div>';
+        stages[g].sort(byName).forEach(function(p){h+=plantRow(p,nums)});
+      });
     });
-  });
+  }else{
+    var groups={},order=[];
+    function add(k,p){if(!groups[k]){groups[k]=[];order.push(k)}groups[k].push(p)}
+    var WN={missing:"Can't find",ship:'Shipping',received:'Received, no label yet',print:'Needs label printed',labeled:'Labeled'};
+    var WO=['missing','ship','received','print','labeled'];
+    list.forEach(function(p){
+      var w=whereOf(p);
+      if(groupBy==='stage')add(p.purchase_stage||'Stage not set',p);
+      else if(groupBy==='status')add(WN[w],p);
+      else add(w==='labeled'?'Labeled':w==='print'?'Needs label printed':w==='received'?'Have it, no label yet':'Not here yet (shipping or missing)',p);
+    });
+    var rank=function(k){
+      if(groupBy==='stage')return k==='Stage not set'?999:stageRank(k);
+      if(groupBy==='status')return WO.indexOf(Object.keys(WN).filter(function(x){return WN[x]===k})[0]);
+      return ['Needs label printed','Have it, no label yet','Labeled','Not here yet (shipping or missing)'].indexOf(k);
+    };
+    order.sort(function(a,b){return rank(a)-rank(b)||(a<b?-1:1)}).forEach(function(k){section(k,groups[k])});
+  }
   return h;
 }
 function plantRow(p,nums){
@@ -728,6 +750,7 @@ document.addEventListener('submit',async function(e){
 document.addEventListener('input',function(e){if(e.target.id==='search'){q=e.target.value;render()}});
 document.addEventListener('change',function(e){
   var t=e.target;
+  if(t.id==='groupsel'){groupBy=t.value;render();return}
   if(t.id==='sortsel'){sortBy=t.value;render();return}
   if(t.name==='sell'){$('#a_askwrap').hidden=t.value!=='sale';return}
   if(t.dataset&&t.dataset.sell){patchPlant(t.dataset.sell,sellPatch(t.value));return}
