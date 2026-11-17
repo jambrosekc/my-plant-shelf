@@ -58,6 +58,7 @@ textarea{min-height:64px}
 .board{display:flex;gap:8px;flex-wrap:wrap;padding:12px 10px 16px;border-bottom:10px solid var(--wood);border-radius:4px;background:linear-gradient(#fbf8f0,#f1e9d8)}
 .pot{background:var(--card);border:1px solid var(--line);border-radius:10px 10px 22px 22px;padding:8px 12px;font-size:13px;max-width:170px;text-align:center}
 .pot.off{opacity:.45}
+.pubbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff6dc;border-bottom:1px solid #e8d9a8;color:#6b5a1e;padding:8px 14px;font-size:13px}.pubbar.mine{background:var(--sage-l);border-color:var(--sage);color:var(--sage-d)}.pubbar a{color:inherit;font-weight:600;white-space:nowrap}
 .ishelf{margin:18px 0 6px}.ishelf h3{font-size:15px;color:var(--sage-d);margin-bottom:6px}
 .irow{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:4px 6px;padding:10px 8px 6px;border-bottom:12px solid var(--wood);border-radius:4px;background:linear-gradient(#fbf8f0,#f1e9d8)}
 .icell{text-align:center;font-size:12px;line-height:1.2}.icell svg{width:100%;height:auto;display:block}.icell b{display:block;font-weight:600}.icell em{display:block;font-style:normal;color:var(--mut);font-size:11px}.icell.off{opacity:.4}
@@ -135,8 +136,9 @@ async function loadProfile(){
 async function saveProfile(patch){
   var before=Object.assign({},prof);Object.assign(prof,patch);render();
   var r=await sb.from('profiles').update(patch).eq('id',user.id);
-  if(r.error){prof=before;render();toast('Could not save: '+r.error.message)}
+  if(r.error){prof=before;render();toast(/duplicate|unique/i.test(r.error.message)?'That username is taken. Try another.':'Could not save: '+r.error.message)}
 }
+function cleanSlug(v){return String(v||'').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,30)}
 function newSlug(){var a=new Uint8Array(6);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2)}).join('')}
 function shareLink(){return location.origin+location.pathname+'?shelf='+prof.public_slug}
 async function loadPublic(){
@@ -375,12 +377,14 @@ function shareView(){
   var h='<div class="card"><h3>Share my shelf</h3><p class="mut">Your shelf is private. Turn this on to get a link anyone can open without logging in.</p>'+
    '<label style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink);margin:12px 0"><input type="checkbox" data-p="is_public"'+(prof.is_public?' checked':'')+'> Make my shelf public</label>'+
    '<label style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink);margin:12px 0"><input type="checkbox" data-p="show_prices"'+(prof.show_prices?' checked':'')+'> Show what I paid on the public page</label>';
-  if(prof.is_public){h+='<label>Your public link</label><input type="text" id="plink" readonly value="'+esc(shareLink())+'"><div class="row" style="margin-top:10px"><button class="btn alt" data-a="copylink">Copy link</button><button class="btn alt" data-a="newlink">Get a new link</button></div><p class="mut">The public page shows plant names, type, stage, and whether you have it or it is shipping. It also shows for-sale plants with their asking price. It never shows sellers, order numbers or notes.</p>'}
+  if(prof.is_public){h+='<label>Your public link</label><input type="text" id="plink" readonly value="'+esc(shareLink())+'"><div class="row" style="margin-top:10px"><button class="btn alt" data-a="copylink">Copy link</button></div><label style="margin-top:14px">Your username (it becomes your link)</label><div class="row"><input type="text" id="slugin" maxlength="30" autocapitalize="off" autocomplete="off" value="'+esc(prof.public_slug||'')+'" style="flex:1"><button class="btn" data-a="saveslug">Save</button></div><p class="mut">3 to 30 letters, numbers, dashes or underscores. Someone else may already have the one you want. <button class="link" style="color:var(--sage-d)" data-a="newlink">Use a random link instead</button></p><p class="mut">The public page shows plant names, type, stage, and whether you have it or it is shipping. It also shows for-sale plants with their asking price. It never shows sellers, order numbers or notes.</p>'}
   else h+='<p class="mut">Nothing is visible to anyone but you right now.</p>';
   return h+'</div>';
 }
 function publicView(){
-  var head='<div class="hdr"><div><h1>'+esc(pub?pub.shelf_name:'My Plant Shelf')+'</h1><small>Plant collection</small></div></div><div class="wrap">';
+  var mine=user&&prof.public_slug&&prof.public_slug===pubSlug;
+  var banner='<div class="pubbar '+(mine?'mine':'')+'">'+(mine?'<span><b>This is your public page.</b> This is exactly what visitors see.</span><a href="'+location.pathname+'">Back to my shelf</a>':'<span><b>Public view</b> · you are looking at a shared shelf. It is read-only.</span><a href="'+location.pathname+'">Make your own</a>')+'</div>';
+  var head=banner+'<div class="hdr"><div><h1>'+esc(pub?pub.shelf_name:'My Plant Shelf')+'</h1><small>Plant collection</small></div></div><div class="wrap">';
   if(pubErr)return head+'<div class="card err">'+esc(pubErr)+'</div></div>';
   if(!pub)return head+'<div class="card"><h3>This shelf is private</h3><p class="mut">The owner has not shared it, or the link has changed.</p></div></div>';
   var list=pub.plants||[],g={};
@@ -517,6 +521,7 @@ document.addEventListener('click',async function(e){
   if(a==='pickcols'){pickOpen=!pickOpen;render();return}
   if(a==='dlprint'){downloadPrint();return}
   if(a==='copylink'){try{await navigator.clipboard.writeText(shareLink());toast('Link copied')}catch(x){var el=$('#plink');if(el){el.select();toast('Press and hold to copy')}}return}
+  if(a==='saveslug'){var ns=cleanSlug($('#slugin').value);if(ns.length<3){toast('Use at least 3 letters or numbers');return}if(ns===prof.public_slug){toast('That is already your username');return}saveProfile({public_slug:ns});return}
   if(a==='newlink'){if(confirm('The old link will stop working. Continue?'))saveProfile({public_slug:newSlug()});return}
   if(a==='sample'){var r=await addPlants(SAMPLES);if(r.error)toast('Could not add: '+r.error.message);else{toast('Added '+r.done+' sample plants');render()}return}
   if(a==='cancelimp'){importState=null;render();return}
@@ -586,7 +591,7 @@ async function boot(session){
 }
 (async function(){
   sb=window.__sb||supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  if(pubSlug){await loadPublic();render();return}
+  if(pubSlug){await loadPublic();try{var ps=await sb.auth.getSession();if(ps.data&&ps.data.session){user=ps.data.session.user;await loadProfile()}}catch(x){}render();return}
   sb.auth.onAuthStateChange(function(ev,session){if(ev==='PASSWORD_RECOVERY'){recovery=true;render()}if(ev==='SIGNED_OUT'){user=null;plants=[];render()}});
   var r=await sb.auth.getSession();
   await boot(r.data&&r.data.session);
