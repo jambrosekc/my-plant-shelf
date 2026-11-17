@@ -125,7 +125,9 @@ async function removePlant(id){
   if(r.error){toast('Could not delete: '+r.error.message);return}
   plants=plants.filter(function(x){return x.id!==id});render();
 }
+var BOOLS=['have_it','labeled','shipping','to_print','to_repot','to_water','for_sale','sold'];
 async function addPlants(rows){
+  rows=rows.map(function(r){var o=Object.assign({},r);BOOLS.forEach(function(k){if(o[k]!==true)o[k]=false});return o});
   var out=[];
   for(var i=0;i<rows.length;i+=200){
     var chunk=rows.slice(i,i+200);
