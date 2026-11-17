@@ -420,8 +420,11 @@ function modalHtml(){
 }
 function listView(list){
   var nums=labelNums();
-  var tot=plants.length,hv=plants.filter(function(p){return p.have_it}).length,lb=plants.filter(function(p){return p.labeled}).length,sh=plants.filter(function(p){return p.shipping}).length;
-  var h='<div class="card"><div class="stats"><div class="stat"><b>'+tot+'</b><span>Plants</span></div><div class="stat"><b>'+hv+'</b><span>Have it</span></div><div class="stat"><b>'+lb+'</b><span>Labeled</span></div><div class="stat"><b>'+sh+'</b><span>Shipping</span></div></div></div>';
+  var c={ship:0,missing:0,received:0,print:0,labeled:0};plants.forEach(function(p){c[whereOf(p)]++});
+  var tot=plants.length,hv=c.received+c.print+c.labeled;
+  function st(n,l){return '<div class="stat"><b>'+n+'</b><span>'+l+'</span></div>'}
+  var h='<div class="card"><div class="stats">'+st(tot,'Plants')+st(hv,'Have it')+st(c.ship,'Shipping')+st(c.missing,"Can't find")+'</div><p class="mut" style="margin:6px 0 10px;text-align:center;font-size:12px">Have it + Shipping + Can\'t find = Plants</p>'+
+   '<div class="stats" style="grid-template-columns:repeat(3,1fr)">'+st(c.labeled,'Labeled')+st(c.print,'Needs label')+st(c.received,'No label yet')+'</div><p class="mut" style="margin:6px 0 0;text-align:center;font-size:12px">Of the ones you have</p></div>';
   if(!tot){h+='<div class="card"><h3>Your shelf is empty</h3><p class="mut">Add a plant, import a spreadsheet, or load a few sample plants to look around.</p><div class="row"><button class="btn" data-tab="add">Add a plant</button><button class="btn alt" data-tab="imp">Import Excel</button><button class="btn alt" data-a="sample">Load samples</button></div></div>';return h}
   var bySeller={};
   list.forEach(function(p){var s=p.seller_name||'Seller not set';(bySeller[s]=bySeller[s]||[]).push(p)});
