@@ -97,7 +97,7 @@ var ALIAS={'Current Temp (°F)':'Current Temp (F)','Inventory Note':'Notes'};
 var STAGES=['TC','Plug','Starter','Established','Juvenile','Corm','Cutting','Tree'];
 
 /* ---------- state ---------- */
-var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',open={},msg='',importState=null,authMode='in',recovery=false,needResend='';
+var sb=null,user=null,shelfName='My Shelf',plants=[],tab='inv',filter='all',q='',open={},msg='',importState=null,authMode='in',recovery=false,needResend='',prof={ready:false,is_public:false,show_prices:false,public_slug:''},pubSlug=new URLSearchParams(location.search).get('shelf'),pub=null,pubErr='';
 
 function $(s,r){return (r||document).querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -110,8 +110,27 @@ async function loadPlants(){
   plants=r.data||[];
 }
 async function loadProfile(){
-  var r=await sb.from('profiles').select('shelf_name').eq('id',user.id).maybeSingle();
-  shelfName=(r&&r.data&&r.data.shelf_name)||(user.user_metadata&&user.user_metadata.shelf_name)||'My Shelf';
+  var r=await sb.from('profiles').select('shelf_name,is_public,show_prices,public_slug').eq('id',user.id).maybeSingle();
+  if(r&&r.error){
+    prof.ready=false;
+    var r2=await sb.from('profiles').select('shelf_name').eq('id',user.id).maybeSingle();
+    shelfName=(r2&&r2.data&&r2.data.shelf_name)||(user.user_metadata&&user.user_metadata.shelf_name)||'My Shelf';return;
+  }
+  var d=(r&&r.data)||{};
+  shelfName=d.shelf_name||(user.user_metadata&&user.user_metadata.shelf_name)||'My Shelf';
+  prof={ready:true,is_public:!!d.is_public,show_prices:!!d.show_prices,public_slug:d.public_slug||''};
+}
+async function saveProfile(patch){
+  var before=Object.assign({},prof);Object.assign(prof,patch);render();
+  var r=await sb.from('profiles').update(patch).eq('id',user.id);
+  if(r.error){prof=before;render();toast('Could not save: '+r.error.message)}
+}
+function newSlug(){var a=new Uint8Array(6);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2)}).join('')}
+function shareLink(){return location.origin+location.pathname+'?shelf='+prof.public_slug}
+async function loadPublic(){
+  var r=await sb.rpc('get_public_shelf',{p_slug:pubSlug});
+  if(r.error){pubErr='Could not load this shelf.';return}
+  pub=r.data||null;
 }
 async function patchPlant(id,patch){
   var p=plants.find(function(x){return x.id===id});if(!p)return;
@@ -164,11 +183,12 @@ function stageRank(s){var i=STAGES.indexOf(s);return i<0?99:i}
 /* ---------- views ---------- */
 function render(){
   var app=$('#app');
+  if(pubSlug){app.innerHTML=publicView();return}
   if(recovery){app.innerHTML=recoveryView();return}
   if(!user){app.innerHTML=authView();return}
   var h='<div class="hdr"><div><h1>'+esc(shelfName)+'</h1><small>'+esc(user.email)+'</small></div><button class="link" data-a="out">Sign out</button></div>';
-  h+='<div class="tabs">'+[['inv','Inventory'],['shelf','Shelf'],['add','Add'],['imp','Import']].map(function(t){return '<button class="tab'+(tab===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
-  h+='<div class="wrap">'+(tab==='inv'?invView():tab==='shelf'?shelfView():tab==='add'?addView():impView())+'</div>';
+  h+='<div class="tabs">'+[['inv','Inventory'],['shelf','Shelf'],['add','Add'],['imp','Import'],['share','Share']].map(function(t){return '<button class="tab'+(tab===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
+  h+='<div class="wrap">'+(tab==='inv'?invView():tab==='shelf'?shelfView():tab==='add'?addView():tab==='share'?shareView():impView())+'</div>';
   var keep=document.activeElement&&document.activeElement.id==='search';
   var pos=keep?document.activeElement.selectionStart:0;
   app.innerHTML=h;
@@ -223,7 +243,7 @@ function invView(){
 function plantRow(p,nums){
   var o=open[p.id];
   var h='<div class="plant"><div class="top"><button class="nm" data-open="'+p.id+'"><b>'+esc(p.plant_name)+'</b><small>'+esc(p.plant_id||'')+' · '+nums[p.id]+(p.for_sale&&!p.sold?' · for sale':'')+(p.sold?' · sold':'')+'</small></button>'+
-   '<div class="tog"><button class="tg'+(p.have_it?' on':'')+'" data-t="have_it" data-id="'+p.id+'">Have</button><button class="tg'+(p.labeled?' on':'')+'" data-t="labeled" data-id="'+p.id+'">Label</button><button class="tg ship'+(p.shipping?' on':'')+'" data-t="shipping" data-id="'+p.id+'">Ship</button></div></div>';
+   '<div class="tog"><button class="tg ship'+(p.shipping?' on':'')+'" data-t="shipping" data-id="'+p.id+'">Ship</button><button class="tg'+(p.have_it?' on':'')+'" data-t="have_it" data-id="'+p.id+'">Have</button><button class="tg'+(p.labeled?' on':'')+'" data-t="labeled" data-id="'+p.id+'">Label</button></div></div>';
   if(o){
     h+='<div class="detail"><div class="flags">'+[['to_print','To print'],['to_repot','To repot'],['to_water','To water'],['for_sale','For sale'],['sold','Sold']].map(function(f){return '<button class="chip'+(p[f[0]]?' on':'')+'" data-t="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('')+'</div>'+
      '<div class="grid2"><div><label>Genus</label><input type="text" data-e="genus" data-id="'+p.id+'" value="'+esc(p.genus||'')+'"></div><div><label>Stage</label><input type="text" data-e="purchase_stage" data-id="'+p.id+'" value="'+esc(p.purchase_stage||'')+'"></div>'+
@@ -242,6 +262,29 @@ function shelfView(){
     h+='<div class="shelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="board">'+g[k].map(function(p){return '<div class="pot'+(haveish(p)?'':' off')+'">'+esc(p.plant_name)+'<em>'+esc(p.seller_name||'')+'</em></div>'}).join('')+'</div></div>';
   });
   return h;
+}
+function shareView(){
+  if(!prof.ready)return '<div class="card"><h3>Sharing</h3><p class="mut">Sharing needs one more database update. Run Part 3 from the setup files in Supabase, then reload this page.</p></div>';
+  var h='<div class="card"><h3>Share my shelf</h3><p class="mut">Your shelf is private. Turn this on to get a link anyone can open without logging in.</p>'+
+   '<label style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink);margin:12px 0"><input type="checkbox" data-p="is_public"'+(prof.is_public?' checked':'')+'> Make my shelf public</label>'+
+   '<label style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink);margin:12px 0"><input type="checkbox" data-p="show_prices"'+(prof.show_prices?' checked':'')+'> Show what I paid on the public page</label>';
+  if(prof.is_public){h+='<label>Your public link</label><input type="text" id="plink" readonly value="'+esc(shareLink())+'"><div class="row" style="margin-top:10px"><button class="btn alt" data-a="copylink">Copy link</button><button class="btn alt" data-a="newlink">Get a new link</button></div><p class="mut">The public page shows plant names, type, stage, and whether you have it or it is shipping. It also shows for-sale plants with their asking price. It never shows sellers, order numbers or notes.</p>'}
+  else h+='<p class="mut">Nothing is visible to anyone but you right now.</p>';
+  return h+'</div>';
+}
+function publicView(){
+  var head='<div class="hdr"><div><h1>'+esc(pub?pub.shelf_name:'My Plant Shelf')+'</h1><small>Plant collection</small></div></div><div class="wrap">';
+  if(pubErr)return head+'<div class="card err">'+esc(pubErr)+'</div></div>';
+  if(!pub)return head+'<div class="card"><h3>This shelf is private</h3><p class="mut">The owner has not shared it, or the link has changed.</p></div></div>';
+  var list=pub.plants||[],g={};
+  list.forEach(function(p){var k=p.genus||'Other';(g[k]=g[k]||[]).push(p)});
+  var h=head+'<p class="mut">'+list.length+' plants</p>';
+  Object.keys(g).sort().forEach(function(k){
+    h+='<div class="shelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="board">'+g[k].map(function(p){
+      var tag=p.sold?'sold':p.for_sale?('for sale'+(p.asking_price!=null?' $'+p.asking_price:'')):p.shipping?'on its way':'';
+      return '<div class="pot'+((p.have_it||p.shipping)?'':' off')+'">'+esc(p.plant_name)+'<em>'+esc([p.purchase_stage,tag].filter(Boolean).join(' · '))+'</em>'+(pub.show_prices&&p.purchase_price!=null?'<em>paid $'+esc(p.purchase_price)+'</em>':'')+'</div>'}).join('')+'</div></div>';
+  });
+  return h+'</div>';
 }
 function addView(){
   return '<div class="card"><h3>Add a plant</h3><form id="addf"><label>Plant name *</label><input type="text" id="a_name" required>'+
@@ -337,6 +380,8 @@ document.addEventListener('click',async function(e){
   if(a==='resend'){var rr=await sb.auth.resend({type:'signup',email:needResend});msg=rr.error?rr.error.message:'Sent. Check your email for a new confirmation link.';render();return}
   if(a==='out'){await sb.auth.signOut();user=null;plants=[];render();return}
   if(a==='tpl'){downloadTemplate();return}
+  if(a==='copylink'){try{await navigator.clipboard.writeText(shareLink());toast('Link copied')}catch(x){var el=$('#plink');if(el){el.select();toast('Press and hold to copy')}}return}
+  if(a==='newlink'){if(confirm('The old link will stop working. Continue?'))saveProfile({public_slug:newSlug()});return}
   if(a==='sample'){var r=await addPlants(SAMPLES);if(r.error)toast('Could not add: '+r.error.message);else{toast('Added '+r.done+' sample plants');render()}return}
   if(a==='cancelimp'){importState=null;render();return}
   if(a==='doimp'){
@@ -381,6 +426,7 @@ document.addEventListener('submit',async function(e){
 document.addEventListener('input',function(e){if(e.target.id==='search'){q=e.target.value;render()}});
 document.addEventListener('change',function(e){
   var t=e.target;
+  if(t.dataset&&t.dataset.p){var pp={};pp[t.dataset.p]=t.checked;saveProfile(pp);return}
   if(t.dataset&&t.dataset.e){var v=t.value.trim(),k=t.dataset.e;var patch={};patch[k]=(k==='purchase_price'||k==='asking_price')?toNum(v):(v||null);patchPlant(t.dataset.id,patch);return}
   if(t.id==='file'&&t.files[0]){
     var f=t.files[0],rd=new FileReader();
@@ -397,6 +443,7 @@ async function boot(session){
 }
 (async function(){
   sb=window.__sb||supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  if(pubSlug){await loadPublic();render();return}
   sb.auth.onAuthStateChange(function(ev,session){if(ev==='PASSWORD_RECOVERY'){recovery=true;render()}if(ev==='SIGNED_OUT'){user=null;plants=[];render()}});
   var r=await sb.auth.getSession();
   await boot(r.data&&r.data.session);
