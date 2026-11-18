@@ -93,7 +93,7 @@ export default function App() {
     <>
       <div className="hdr">
         <div style={{ minWidth: 0 }}>
-          <small style={{ display: 'block', fontSize: 12, opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</small>
+          <small style={{ display: 'block', fontSize: 12, opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis' }}>{prof.public_slug ? `@${prof.public_slug}` : user.email}</small>
         </div>
         <div className="hbtns">
           <button className="hbtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀ Light' : '☾ Dark'}</button>
