@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { newPhotoPath } from './image'
+import { BOOLS } from './importer'
 import type { Plant, PlantPhoto } from './types'
 
 export function usePlants(userId: string | undefined) {
@@ -36,6 +37,22 @@ export function usePlants(userId: string | undefined) {
       setPlants(before)
       setError(r.error.message)
     }
+  }
+
+  async function addPlants(rows: Record<string, unknown>[]) {
+    const clean = rows.map((r) => {
+      const o = { ...r }
+      BOOLS.forEach((k) => { if (o[k] !== true) o[k] = false })
+      return o
+    })
+    let done = 0
+    for (let i = 0; i < clean.length; i += 200) {
+      const r = await supabase.from('plants').insert(clean.slice(i, i + 200)).select()
+      if (r.error) return { error: r.error.message, done }
+      done += r.data?.length ?? 0
+    }
+    await load()
+    return { error: '', done }
   }
 
   async function remove(id: string) {
@@ -83,5 +100,5 @@ export function usePlants(userId: string | undefined) {
     }))
   }
 
-  return { plants, photos, loading, error, reload: load, patch, remove, addPhoto, deletePhoto, makeCover }
+  return { plants, photos, loading, error, reload: load, patch, addPlants, remove, addPhoto, deletePhoto, makeCover }
 }

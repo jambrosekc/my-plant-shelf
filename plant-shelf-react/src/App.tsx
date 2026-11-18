@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import AuthScreen from './components/AuthScreen'
 import NewPassword from './components/NewPassword'
 import Hero from './components/Hero'
+import AddPlant from './components/AddPlant'
+import ImportView from './components/ImportView'
 import ListView from './components/ListView'
 import SheetView from './components/SheetView'
 import PlantModal from './components/PlantModal'
@@ -17,7 +19,7 @@ const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catc
 
 export default function App() {
   const { user, loading, recovery, clearRecovery } = useAuth()
-  const { plants, photos, loading: plantsLoading, error, patch, remove, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
+  const { plants, photos, loading: plantsLoading, error, patch, addPlants, remove, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
   const [modalId, setModalId] = useState<string | null>(null)
   const [theme, setTheme] = useState(() => store('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
   const [view, setView] = useState<View>(() => store('view', 'shelf') as View)
@@ -29,6 +31,8 @@ export default function App() {
   const [groupBy, setGroupBy] = useState<GroupBy>('seller')
   const [q, setQ] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [tab, setTab] = useState<'home' | 'add' | 'imp'>('home')
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -43,6 +47,8 @@ export default function App() {
 
   const shelf = (user.user_metadata?.shelf_name as string) || 'My Shelf'
   const searching = !!q || filter !== 'all'
+  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3000) }
+  const go = (t: 'home' | 'add' | 'imp') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
   const open = (id: string) => setModalId(id)
   const modalPlant = plants.find((p) => p.id === modalId)
 
@@ -84,17 +90,33 @@ export default function App() {
         </div>
         <div className="hbtns">
           <button className="hbtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀ Light' : '☾ Dark'}</button>
+          <button className="hbtn" onClick={() => go('add')}>+ Add</button>
           <button className="hbtn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">☰</button>
         </div>
       </div>
       {menuOpen && (
         <div className="menu">
+          <button onClick={() => go('add')}>Add a plant</button>
+          <button onClick={() => go('imp')}>Import from Excel</button>
           <button onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
       )}
       <div className="wrap">
         {error && <p className="mut">{error}</p>}
-        {plantsLoading ? <p className="mut">Loading your plants...</p> : (
+        {tab !== 'home' ? (
+          <>
+            <button className="link back" onClick={() => go('home')}>← Back to my plants</button>
+            {tab === 'add'
+              ? <AddPlant onAdd={addPlants} done={(n) => { flash('Added ' + n); go('home') }} />
+              : <ImportView onImport={addPlants} done={(n) => { flash('Imported ' + n + ' plants'); go('home') }} />}
+          </>
+        ) : plantsLoading ? <p className="mut">Loading your plants...</p> : !plants.length ? (
+          <div className="card">
+            <h3>Your shelf is empty</h3>
+            <p className="mut">Add a plant or import a spreadsheet to get started.</p>
+            <div className="row"><button className="btn" onClick={() => go('add')}>Add a plant</button><button className="btn alt" onClick={() => go('imp')}>Import Excel</button></div>
+          </div>
+        ) : (
           <>
             <Hero shelf={shelf} plants={plants} onPick={open} />
             <div className="seg">
@@ -131,6 +153,7 @@ export default function App() {
           </>
         )}
       </div>
+      {toast && <div className="toast">{toast}</div>}
       {modalPlant && (
         <PlantModal
           plant={modalPlant}
