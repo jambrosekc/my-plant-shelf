@@ -63,7 +63,7 @@ textarea{min-height:64px}
 .hbtns{display:flex;gap:8px}.hbtn{background:rgba(128,128,128,.2);border:1px solid rgba(128,128,128,.45);color:var(--hdrink);border-radius:999px;padding:6px 12px;font-size:14px}
 .menu{position:sticky;top:52px;z-index:6;max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.15);display:flex;flex-direction:column;overflow:hidden}.menu button{background:none;border:0;border-bottom:1px solid var(--line);text-align:left;padding:13px 16px;font-size:15px;color:var(--ink)}.menu button:last-child{border:0;color:var(--bad)}
 .seg{display:flex;border:1px solid var(--sage);border-radius:999px;overflow:hidden;margin-top:4px}.seg button{flex:1;background:var(--card);border:0;padding:9px 4px;font-size:14px;color:var(--sage-d)}.seg button.on{background:var(--sage);color:var(--on);font-weight:600}
-.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;text-align:center}.pcard.off .pc{opacity:.45}.pc{background:none;border:0;padding:0;width:100%;font-size:13px;color:var(--ink)}.pc svg{width:100%;height:auto;display:block}.pc b{display:block;font-weight:600;line-height:1.2}.pc em{display:block;font-style:normal;color:var(--mut);font-size:11px}.pcard .wsel{margin-top:6px;width:100%;max-width:none}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;text-align:center}.pcard.off .pc{opacity:.45}.pc{background:none;border:0;padding:0;width:100%;font-size:13px;color:var(--ink)}.pc svg{width:100%;height:auto;display:block}.pimg{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block}.pot .pimg{width:84px;height:84px;margin:0 auto 4px}.gal{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}.gal .ph{position:relative;flex:0 0 auto}.gal img{width:120px;height:120px;object-fit:cover;border-radius:10px;display:block}.gal .ph small{position:absolute;left:4px;top:4px;background:var(--sage);color:var(--on);border-radius:6px;padding:1px 6px;font-size:11px}.gal .ph .pb{display:flex;gap:4px;margin-top:4px}.gal .pb button{flex:1;font-size:11px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink)}.bigph{width:100%;max-height:300px;object-fit:contain;border-radius:10px;display:block;margin:0 auto 6px}.pc b{display:block;font-weight:600;line-height:1.2}.pc em{display:block;font-style:normal;color:var(--mut);font-size:11px}.pcard .wsel{margin-top:6px;width:100%;max-width:none}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;display:flex;align-items:flex-end;justify-content:center}.msheet{background:var(--card);width:100%;max-width:760px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
 .icell[data-m]{cursor:pointer}
 .hero{max-width:900px;margin:0 auto;padding:0 14px}.lights{display:block;width:100%;height:auto;margin:-2px 0 0;overflow:visible}.bulb .halo{animation:tw 3.6s ease-in-out infinite}@keyframes tw{0%,100%{opacity:.55}50%{opacity:1}}
@@ -131,7 +131,7 @@ var STAGES=['TC','Plug','Starter','Established','Large','Tree','Rehab','Corm','C
 function stageSel(attrs,cur){var o=STAGES.slice();if(cur&&o.indexOf(cur)<0)o.push(cur);return '<select '+attrs+'><option value="">Stage</option>'+o.map(function(x){return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+(x==='TC'?'TC (tissue culture)':esc(x))+'</option>'}).join('')+'</select>'}
 var theme=(function(){try{var t=localStorage.getItem('theme');if(t)return t}catch(e){}return (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'})();
 document.documentElement.setAttribute('data-theme',theme);
-var groupBy='seller',gmode='genus',gsel=null,sortBy='name',modalEdit=false,sheetEdit=false;
+var photos={},groupBy='seller',gmode='genus',gsel=null,sortBy='name',modalEdit=false,sheetEdit=false;
 var LIGHTS='<svg class="lights" viewBox="0 0 640 60" aria-hidden="true"><defs><radialGradient id="halo2"><stop offset="0" stop-color="#ffe7a0" stop-opacity=".95"/><stop offset="1" stop-color="#ffe7a0" stop-opacity="0"/></radialGradient></defs><g class="strand"><path d="M0 8 C60 26 130 40 210 30 S350 4 430 8 S580 30 640 22" fill="none" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1.1"/><g class="bulb" transform="translate(46,24)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:0.0s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(106,33)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:0.6s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#dfe9d4" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(170,36)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:1.1s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f2dcd0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(236,30)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:1.7s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(300,20)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:2.2s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#e6ecc9" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(364,13)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:2.8s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(428,12)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:3.3s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#dfe9d4" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(492,18)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:3.9s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f2dcd0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(556,25)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:4.4s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#f7e6b0" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g><g class="bulb" transform="translate(612,30)"><path d="M0 0 v6" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/><circle class="halo" cx="0" cy="15" r="15" fill="url(#halo2)" style="animation-delay:5.0s"/><ellipse cx="0" cy="14" rx="4.6" ry="6.4" fill="#e6ecc9" stroke="#2f3b33" stroke-opacity=".6" stroke-width="1"/></g></g></svg>';
 
 /* ---------- state ---------- */
@@ -146,10 +146,14 @@ async function loadPlants(){
   var r=await sb.from('plants').select('*').order('created_at',{ascending:true});
   if(r.error){toast('Could not load: '+r.error.message);return}
   plants=r.data||[];
-}
-async function loadProfile(){
-  var r=await sb.from('profiles').select('shelf_name,is_public,show_prices,public_slug,show_seller,show_soil,show_conditions,show_lineage,show_notes').eq('id',user.id).maybeSingle();
-  var v4=true;
+  await loadPhotos();
+}async function loadProfile(){
+  var r=await sb.from('profiles').select('shelf_name,is_public,show_prices,public_slug,show_seller,show_soil,show_conditions,show_lineage,show_notes,show_photos').eq('id',user.id).maybeSingle();
+  var v4=true,v5=true;
+  if(r&&r.error){
+    v5=false;
+    r=await sb.from('profiles').select('shelf_name,is_public,show_prices,public_slug,show_seller,show_soil,show_conditions,show_lineage,show_notes').eq('id',user.id).maybeSingle();
+  }
   if(r&&r.error){
     v4=false;
     r=await sb.from('profiles').select('shelf_name,is_public,show_prices,public_slug').eq('id',user.id).maybeSingle();
@@ -161,7 +165,7 @@ async function loadProfile(){
   }
   var d=(r&&r.data)||{};
   shelfName=d.shelf_name||(user.user_metadata&&user.user_metadata.shelf_name)||'My Shelf';
-  prof={ready:true,v4:v4,is_public:!!d.is_public,show_prices:!!d.show_prices,public_slug:d.public_slug||'',show_seller:!!d.show_seller,show_soil:!!d.show_soil,show_conditions:!!d.show_conditions,show_lineage:!!d.show_lineage,show_notes:!!d.show_notes};
+  prof={ready:true,v4:v4,v5:v5,show_photos:!!d.show_photos,photosReady:prof.photosReady,is_public:!!d.is_public,show_prices:!!d.show_prices,public_slug:d.public_slug||'',show_seller:!!d.show_seller,show_soil:!!d.show_soil,show_conditions:!!d.show_conditions,show_lineage:!!d.show_lineage,show_notes:!!d.show_notes};
 }async function saveProfile(patch){
   var before=Object.assign({},prof);Object.assign(prof,patch);render();
   var r=await sb.from('profiles').update(patch).eq('id',user.id);
@@ -183,6 +187,7 @@ async function loadPublic(){
   if(r.error){Object.keys(before).forEach(function(k){p[k]=before[k]});render();toast('Could not save: '+r.error.message)}
 }
 async function removePlant(id){
+  var ph=photos[id]||[];if(ph.length){try{await sb.storage.from('plant-photos').remove(ph.map(function(x){return x.path}))}catch(x){}delete photos[id]}
   var r=await sb.from('plants').delete().eq('id',id);
   if(r.error){toast('Could not delete: '+r.error.message);return}
   plants=plants.filter(function(x){return x.id!==id});render();
@@ -239,6 +244,64 @@ function passes(p){
 }
 function stageRank(s){var i=STAGES.indexOf(s);return i<0?99:i}
 
+/* ---------- photos ---------- */
+function photoUrl(path){return SUPABASE_URL+'/storage/v1/object/public/plant-photos/'+path}
+function photoList(p){return pubSlug?(p.photos||[]):((photos[p.id]||[]).map(function(x){return x.path}))}
+function coverUrl(p){var l=photoList(p);return l.length?photoUrl(l[0]):null}
+function tileArt(p){var u=coverUrl(p);return u?'<img class="pimg" loading="lazy" alt="'+esc(p.plant_name)+'" src="'+esc(u)+'">':plantSVG(p)}
+function resizeImage(file,max){
+  return new Promise(function(resolve,reject){
+    var img=new Image(),url=URL.createObjectURL(file);
+    img.onload=function(){
+      var w=img.width,h=img.height,k=Math.min(1,max/Math.max(w,h));
+      var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(b){b?resolve(b):reject(new Error('Could not read that image'))},'image/jpeg',0.82);
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('That file is not an image I can read'))};
+    img.src=url;
+  });
+}
+async function loadPhotos(){
+  var r=await sb.from('plant_photos').select('*').order('position',{ascending:true});
+  photos={};
+  if(r.error){prof.photosReady=false;return}
+  prof.photosReady=true;
+  (r.data||[]).sort(function(a,b){return (a.position-b.position)||(a.created_at<b.created_at?-1:1)}).forEach(function(x){(photos[x.plant_id]=photos[x.plant_id]||[]).push(x)});
+}
+async function addPhotos(plantId,files){
+  var list=photos[plantId]=photos[plantId]||[],n=0;
+  for(var i=0;i<files.length;i++){
+    try{
+      var blob=await resizeImage(files[i],1400);
+      var path=user.id+'/'+plantId+'/'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+'.jpg';
+      var up=await sb.storage.from('plant-photos').upload(path,blob,{contentType:'image/jpeg'});
+      if(up.error){toast('Upload failed: '+up.error.message);break}
+      var pos=list.length?Math.max.apply(null,list.map(function(x){return x.position}))+1:0;
+      var ins=await sb.from('plant_photos').insert([{plant_id:plantId,path:path,position:pos}]).select();
+      if(ins.error){toast('Could not save photo: '+ins.error.message);break}
+      var row=(ins.data&&ins.data[0])||{id:path,plant_id:plantId,path:path,position:pos};
+      list.push(row);n++;
+    }catch(e){toast(e.message||'Could not add that photo');break}
+  }
+  if(n)toast(n+' photo'+(n>1?'s':'')+' added');
+  render();
+}
+async function deletePhoto(plantId,id){
+  var list=photos[plantId]||[],x=list.find(function(y){return y.id===id});if(!x)return;
+  await sb.storage.from('plant-photos').remove([x.path]);
+  var r=await sb.from('plant_photos').delete().eq('id',id);
+  if(r.error){toast('Could not delete: '+r.error.message);return}
+  photos[plantId]=list.filter(function(y){return y.id!==id});render();
+}
+async function makeCover(plantId,id){
+  var list=photos[plantId]||[],x=list.find(function(y){return y.id===id});if(!x)return;
+  var min=Math.min.apply(null,list.map(function(y){return y.position}));
+  var r=await sb.from('plant_photos').update({position:min-1}).eq('id',id);
+  if(r.error){toast('Could not change cover: '+r.error.message);return}
+  x.position=min-1;list.sort(function(a,b){return a.position-b.position});render();
+}
 /* ---------- plant drawing (from the illustrated shelf) ---------- */
 function genKey(p){return (p.genus&&p.genus!=='None')?p.genus:'Unknown'}
 var gid=0;
@@ -288,7 +351,7 @@ function illusShelf(list,opts){
   Object.keys(g).sort().forEach(function(k){
     h+='<div class="ishelf"><h3>'+esc(k)+' <span class="mut">('+g[k].length+')</span></h3><div class="irow">'+g[k].map(function(p){
       var have=p.have_it||p.shipping,sub=opts.sub?opts.sub(p):(p.seller_name||'');
-      return '<div class="icell'+(have?'':' off')+'"'+(opts.edit?' data-m="'+p.id+'"':'')+'>'+plantSVG(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc(sub)+'</em></div>'}).join('')+'</div></div>';
+      return '<div class="icell'+(have?'':' off')+'"'+(opts.edit?' data-m="'+p.id+'"':'')+'>'+tileArt(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc(sub)+'</em></div>'}).join('')+'</div></div>';
   });
   return h;
 }
@@ -361,13 +424,13 @@ function repPlant(g){return g.items.find(function(p){return p.have_it})||g.items
 function genShelf(list){
   var gs=genusGroups(list),h='';
   for(var i=0;i<gs.length;i+=3){
-    h+='<div class="grow">'+gs.slice(i,i+3).map(function(g){return '<button class="gpot" data-g="'+esc(g.k)+'"><span class="gbub">×'+g.items.length+'</span>'+plantSVG(repPlant(g))+'<span class="gname">'+esc(g.k)+'</span></button>'}).join('')+'</div><div class="plank"></div>';
+    h+='<div class="grow">'+gs.slice(i,i+3).map(function(g){return '<button class="gpot" data-g="'+esc(g.k)+'"><span class="gbub">×'+g.items.length+'</span>'+tileArt(repPlant(g))+'<span class="gname">'+esc(g.k)+'</span></button>'}).join('')+'</div><div class="plank"></div>';
   }
   return '<p class="mut" style="font-style:italic;font-family:var(--display);font-size:20px;margin:14px 0 0">Pick a genus to open its shelf</p>'+h;
 }
 function genCards(list){
   return '<p class="mut" style="font-style:italic;font-family:var(--display);font-size:20px;margin:14px 0 0">Pick a genus to open its shelf</p><div class="gcards">'+genusGroups(list).map(function(g){
-    return '<button class="gcard" data-g="'+esc(g.k)+'"><div class="gtop"><span><i></i><i></i><i></i></span><span>GENUS</span></div><div class="gbody"><span class="gbub">×'+g.items.length+'</span>'+plantSVG(repPlant(g))+'</div><div class="gfoot"><b>'+esc(g.k)+'</b><span>'+g.items.length+' plant'+(g.items.length>1?'s':'')+'</span></div></button>'}).join('')+'</div>';
+    return '<button class="gcard" data-g="'+esc(g.k)+'"><div class="gtop"><span><i></i><i></i><i></i></span><span>GENUS</span></div><div class="gbody"><span class="gbub">×'+g.items.length+'</span>'+tileArt(repPlant(g))+'</div><div class="gfoot"><b>'+esc(g.k)+'</b><span>'+g.items.length+' plant'+(g.items.length>1?'s':'')+'</span></div></button>'}).join('')+'</div>';
 }
 function plantsHome(list){
   var searching=!!q||filter!=='all';
@@ -396,17 +459,23 @@ function cardsView(list){
   var nums=labelNums();
   return '<div class="cardgrid">'+list.map(function(p){
     var have=p.have_it||p.shipping;
-    return '<div class="pcard'+(have?'':' off')+'"><button class="pc" data-m="'+p.id+'">'+plantSVG(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc([p.seller_name,p.purchase_stage].filter(Boolean).join(' · '))+'</em><em>'+(pubSlug?esc(p.sold?'sold':p.shipping?'on its way':p.for_sale?'for sale'+(p.asking_price!=null?' $'+p.asking_price:''):''):esc(p.plant_id||'')+' · '+nums[p.id]+(p.sold?' · sold':p.for_sale?' · for sale':''))+'</em></button>'+
+    return '<div class="pcard'+(have?'':' off')+'"><button class="pc" data-m="'+p.id+'">'+tileArt(p)+'<b>'+esc(p.plant_name)+'</b><em>'+esc([p.seller_name,p.purchase_stage].filter(Boolean).join(' · '))+'</em><em>'+(pubSlug?esc(p.sold?'sold':p.shipping?'on its way':p.for_sale?'for sale'+(p.asking_price!=null?' $'+p.asking_price:''):''):esc(p.plant_id||'')+' · '+nums[p.id]+(p.sold?' · sold':p.for_sale?' · for sale':''))+'</em></button>'+
      (pubSlug?'':'<select class="wsel w-'+whereOf(p)+'" data-w="'+p.id+'">'+WHERE.map(function(w){return '<option value="'+w[0]+'"'+(whereOf(p)===w[0]?' selected':'')+'>'+w[1]+'</option>'}).join('')+'</select>')+'</div>'}).join('')+'</div>';
 }
 function fld(k,lab,p,type){return '<div><label>'+lab+'</label><input type="'+(type||'text')+'" data-f2="'+k+'" value="'+esc(p[k]==null?'':p[k])+'"></div>'}
+function galleryHtml(p){
+  var l=photos[p.id]||[],g='';
+  if(prof.photosReady===false)return '<p class="mut">To add photos, run Part 5 from the setup files in Supabase, then reload.</p>';
+  if(l.length){g+='<div class="gal">'+l.map(function(x,i){return '<div class="ph"><img loading="lazy" alt="" src="'+esc(photoUrl(x.path))+'">'+(i===0?'<small>Cover</small>':'')+'<div class="pb">'+(i===0?'':'<button data-a="pcover" data-id="'+p.id+'" data-pid="'+x.id+'">Make cover</button>')+'<button data-a="pdel" data-id="'+p.id+'" data-pid="'+x.id+'">Delete</button></div></div>'}).join('')+'</div>'}
+  return g+'<label class="btn alt" style="display:inline-block;cursor:pointer;margin:4px 0">+ Add photos<input type="file" accept="image/*" multiple hidden data-photo="'+p.id+'"></label>';
+}
 function modalHtml(){
   var p=plants.find(function(x){return x.id===modalId});if(!p){modalId=null;return ''}
   var chipsW=WHERE.map(function(w){return '<button class="chip'+(whereOf(p)===w[0]?' on':'')+'" data-w2="'+w[0]+'" data-id="'+p.id+'">'+w[1]+'</button>'}).join('');
   var chipsC=[['to_repot','Needs repot'],['to_water','Needs water']].map(function(f){return '<button class="chip'+(p[f[0]]?' on':'')+'" data-t="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('');
   var chipsS=[['none','Not selling'],['sale','For sale'],['sold','Sold']].map(function(f){return '<button class="chip'+(sellOf(p)===f[0]?' on':'')+'" data-s="'+f[0]+'" data-id="'+p.id+'">'+f[1]+'</button>'}).join('');
   var h='<div class="modal" data-a="closem"><div class="msheet"><div class="row" style="justify-content:space-between;align-items:center"><h3>'+esc(p.plant_name)+'</h3><button class="link" style="color:var(--sage-d)" data-a="closem">Done</button></div><div class="mut">'+esc(p.plant_id||'')+'</div>'+
-   '<div class="sec">Where is it?</div><div class="flags">'+chipsW+'</div><div class="sec">Care</div><div class="flags">'+chipsC+'</div><div class="sec">Selling</div><div class="flags">'+chipsS+'</div><div class="sec">Details</div>';
+   '<div class="sec">Photos</div>'+galleryHtml(p)+'<div class="sec">Where is it?</div><div class="flags">'+chipsW+'</div><div class="sec">Care</div><div class="flags">'+chipsC+'</div><div class="sec">Selling</div><div class="flags">'+chipsS+'</div><div class="sec">Details</div>';
   if(modalEdit){
     h+='<div class="grid2">'+fld('plant_name','Plant name',p)+fld('genus','Genus',p)+'<div><label>Stage</label>'+stageSel('data-f2="purchase_stage"',p.purchase_stage||'')+'</div>'+fld('seller_name','Seller',p)+fld('sourced_from','Where bought',p)+fld('purchase_price','Paid ($)',p,'number')+fld('soil_medium','Soil',p)+fld('asking_price','Asking price ($)',p,'number')+'</div>'+
      '<label>Notes</label><textarea data-f2="notes">'+esc(p.notes||'')+'</textarea>'+
@@ -512,10 +581,16 @@ function shareView(){
     [['show_seller','Seller and where I bought it'],['show_soil','Soil (medium, what it likes, pH)'],['show_conditions','Conditions (light, temperature, humidity, watering, last watered)'],['show_lineage','Where it came from (grown from, lineage)'],['show_notes','My notes']].forEach(function(t){
       h+='<label style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink);margin:10px 0"><input type="checkbox" data-p="'+t[0]+'"'+(prof[t[0]]?' checked':'')+'> '+t[1]+'</label>';
     });
+    if(prof.v5)h+='<label style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink);margin:10px 0"><input type="checkbox" data-p="show_photos"'+(prof.show_photos?' checked':'')+'> My photos</label>';
+    else h+='<p class="mut">To show photos on the public page, run Part 5 from the setup files in Supabase, then reload.</p>';
   }else h+='<p class="mut">To choose more things to show (soil, temperature, humidity and so on), run Part 4 from the setup files in Supabase, then reload this page.</p>';
   if(prof.is_public){h+='<label>Your public link</label><input type="text" id="plink" readonly value="'+esc(shareLink())+'"><div class="row" style="margin-top:10px"><button class="btn alt" data-a="copylink">Copy link</button></div><label style="margin-top:14px">Your username (it becomes your link)</label><div class="row"><input type="text" id="slugin" maxlength="30" autocapitalize="off" autocomplete="off" value="'+esc(prof.public_slug||'')+'" style="flex:1"><button class="btn" data-a="saveslug">Save</button></div><p class="mut">3 to 30 letters, numbers, dashes or underscores. Someone else may already have the one you want. <button class="link" style="color:var(--sage-d)" data-a="newlink">Use a random link instead</button></p><p class="mut">The public page shows plant names, type, stage, and whether you have it or it is shipping. It also shows for-sale plants with their asking price. Visitors can tap a plant for more. Order numbers are never shown. Seller, soil, conditions, lineage and notes only appear if you switch them on above.</p>'}
   else h+='<p class="mut">Nothing is visible to anyone but you right now.</p>';
   return h+'</div>';
+}
+function pubGallery(p){
+  var l=photoList(p);if(!l.length)return '';
+  return '<img class="bigph" alt="" src="'+esc(photoUrl(l[0]))+'">'+(l.length>1?'<div class="gal">'+l.slice(1).map(function(x){return '<div class="ph"><img loading="lazy" alt="" src="'+esc(photoUrl(x))+'"></div>'}).join('')+'</div>':'');
 }
 function publicModal(){
   var p=plants.find(function(x){return x.id===modalId});if(!p){modalId=null;return ''}
@@ -529,7 +604,7 @@ function publicModal(){
    ['Last watered',p.last_watered],['Water every',p.water_every_days==null?'':p.water_every_days+' days'],['Notes',p.notes]]
    .filter(function(r){return r[1]!=null&&r[1]!==''});
   return '<div class="modal" data-a="closem"><div class="msheet"><div class="row" style="justify-content:space-between;align-items:center"><h3>'+esc(p.plant_name)+'</h3><button class="link" style="color:var(--sage-d)" data-a="closem">Close</button></div>'+
-   '<div style="margin:6px 0">'+plantSVG(p).replace('<svg ','<svg style="max-width:170px;display:block;margin:0 auto" ')+'</div><dl class="kv">'+rows.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'</dl></div></div>';
+   '<div style="margin:6px 0">'+pubGallery(p)+'</div>'+'<div style="margin:6px 0">'+(photoList(p).length?'':plantSVG(p)).replace('<svg ','<svg style="max-width:170px;display:block;margin:0 auto" ')+'</div><dl class="kv">'+rows.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'</dl></div></div>';
 }
 function publicView(){
   var mine=user&&prof.public_slug&&prof.public_slug===pubSlug;
@@ -670,6 +745,8 @@ document.addEventListener('click',async function(e){
   if(a==='resend'){var rr=await sb.auth.resend({type:'signup',email:needResend});msg=rr.error?rr.error.message:'Sent. Check your email for a new confirmation link.';render();return}
   if(a==='out'){await sb.auth.signOut();user=null;plants=[];render();return}
   if(a==='theme'){theme=theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',theme);try{localStorage.setItem('theme',theme)}catch(x){}render();return}
+  if(a==='pdel'){if(confirm('Delete this photo?'))deletePhoto(t.dataset.id,t.dataset.pid);return}
+  if(a==='pcover'){makeCover(t.dataset.id,t.dataset.pid);return}
   if(a==='medit'){modalEdit=true;render();return}
   if(a==='mcancel'){modalEdit=false;render();return}
   if(a==='msave'){
@@ -750,6 +827,7 @@ document.addEventListener('submit',async function(e){
 document.addEventListener('input',function(e){if(e.target.id==='search'){q=e.target.value;render()}});
 document.addEventListener('change',function(e){
   var t=e.target;
+  if(t.dataset&&t.dataset.photo&&t.files&&t.files.length){var fl=Array.prototype.slice.call(t.files);toast('Uploading...');addPhotos(t.dataset.photo,fl);return}
   if(t.id==='groupsel'){groupBy=t.value;render();return}
   if(t.id==='sortsel'){sortBy=t.value;render();return}
   if(t.name==='sell'){$('#a_askwrap').hidden=t.value!=='sale';return}
