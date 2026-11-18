@@ -12,6 +12,8 @@ import ShareView from './components/ShareView'
 import DiscoverView from './components/DiscoverView'
 import FavoritesView from './components/FavoritesView'
 import FeedView from './components/FeedView'
+import SearchView from './components/SearchView'
+import { Compass, Heart, Home, Search, Sparkles, X } from 'lucide-react'
 import { useProfile } from './lib/useProfile'
 import PlantModal from './components/PlantModal'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf } from './components/PlantViews'
@@ -38,9 +40,10 @@ export default function App() {
   const [groupBy, setGroupBy] = useState<GroupBy>('seller')
   const [q, setQ] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [tab, setTab] = useState<'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed'>('home')
+  const [tab, setTab] = useState<'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed' | 'search'>('home')
   const { prof, save: saveProf, error: profError } = useProfile(user?.id)
   const [toast, setToast] = useState('')
+  const [gq, setGq] = useState('')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -58,7 +61,7 @@ export default function App() {
   const shelf = (user.user_metadata?.shelf_name as string) || 'My Shelf'
   const searching = !!q || filter !== 'all'
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3000) }
-  const go = (t: 'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
+  const go = (t: 'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed' | 'search') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
   const open = (id: string) => setModalId(id)
   const modalPlant = plants.find((p) => p.id === modalId)
 
@@ -95,23 +98,24 @@ export default function App() {
   return (
     <>
       <div className="hdr">
-        <div style={{ minWidth: 0 }}>
-          <small style={{ display: 'block', fontSize: 12, opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis' }}>{prof.public_slug ? `@${prof.public_slug}` : user.email}</small>
+        <button className="hbtn hicon" onClick={() => go('home')} aria-label="Home"><Home size={18} /></button>
+        <div className="hsearch">
+          <Search size={15} />
+          <input type="search" placeholder="Search plants and shelves" value={gq} onChange={(e) => { setGq(e.target.value); setTab(e.target.value.trim() ? 'search' : 'home'); setMenuOpen(false) }} />
+          {gq && <button aria-label="Clear search" onClick={() => go('home')}><X size={15} /></button>}
         </div>
         <div className="hbtns">
-          <button className="hbtn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀ Light' : '☾ Dark'}</button>
-          <button className="hbtn" onClick={() => go('add')}>+ Add</button>
+          <button className="hbtn" onClick={() => go('add')} aria-label="Add a plant">+ Add</button>
           <button className="hbtn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">☰</button>
         </div>
       </div>
       {menuOpen && (
         <div className="menu">
+          <div className="mut" style={{ padding: '10px 16px', fontSize: 13, borderBottom: '1px solid var(--line)' }}>{prof.public_slug ? `@${prof.public_slug}` : user.email}</div>
           <button onClick={() => go('add')}>Add a plant</button>
           <button onClick={() => go('imp')}>Import from Excel</button>
-          <button onClick={() => go('feed')}>New plants</button>
-          <button onClick={() => go('discover')}>Discover shelves</button>
-          <button onClick={() => go('favs')}>My favorites</button>
           <button onClick={() => go('share')}>Share my shelf</button>
+          <button onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMenuOpen(false) }}>{theme === 'dark' ? '☀ Switch to light mode' : '☾ Switch to dark mode'}</button>
           <button onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
       )}
@@ -122,6 +126,8 @@ export default function App() {
             <button className="link back" onClick={() => go('home')}>← Back to my plants</button>
             {tab === 'add'
               ? <AddPlant onAdd={addPlants} done={(n) => { flash('Added ' + n); go('home') }} />
+              : tab === 'search'
+              ? <SearchView query={gq} mine={plants} onOpenMine={(id) => setModalId(id)} />
               : tab === 'feed'
               ? <FeedView userId={user.id} />
               : tab === 'discover'
@@ -184,6 +190,11 @@ export default function App() {
           </>
         )}
       </div>
+      <nav className="bnav" aria-label="Main">
+        {([['home', 'My shelf', Home], ['feed', 'New', Sparkles], ['discover', 'Discover', Compass], ['favs', 'Favorites', Heart]] as const).map(([k, l, Icon]) => (
+          <button key={k} className={tab === k ? 'on' : ''} onClick={() => go(k)}><Icon size={20} /><span>{l}</span></button>
+        ))}
+      </nav>
       {toast && <div className="toast">{toast}</div>}
       {modalPlant && (
         <PlantModal
