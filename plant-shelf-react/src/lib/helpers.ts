@@ -100,3 +100,6 @@ export function labelNums(plants: Plant[]): Record<string, string> {
   })
   return m
 }
+
+export const haveish = (p: Plant) => p.have_it || p.shipping
+export type GroupBy = 'seller' | 'stage' | 'status' | 'label'

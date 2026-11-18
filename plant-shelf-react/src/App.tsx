@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import AuthScreen from './components/AuthScreen'
 import NewPassword from './components/NewPassword'
 import Hero from './components/Hero'
+import ListView from './components/ListView'
+import SheetView from './components/SheetView'
 import PlantModal from './components/PlantModal'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf } from './components/PlantViews'
 import { supabase } from './lib/supabase'
 import { useAuth } from './lib/useAuth'
 import { usePlants } from './lib/usePlants'
-import { gkey, passes, sortList, type Filter, type SortBy } from './lib/helpers'
+import { gkey, passes, sortList, type Filter, type SortBy, type GroupBy } from './lib/helpers'
 
 type View = 'shelf' | 'cards' | 'list' | 'sheet'
 const store = (k: string, d: string) => { try { return localStorage.getItem(k) || d } catch { return d } }
@@ -24,6 +26,7 @@ export default function App() {
   const [sortBy, setSortBy] = useState<SortBy>('name')
   const [filter, setFilter] = useState<Filter>('all')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [groupBy, setGroupBy] = useState<GroupBy>('seller')
   const [q, setQ] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -44,8 +47,8 @@ export default function App() {
   const modalPlant = plants.find((p) => p.id === modalId)
 
   function body() {
-    if (view === 'list' || view === 'sheet')
-      return <p className="mut">The {view} view is coming in the next update. Shelf and Cards work now.</p>
+    if (view === 'list') return <ListView all={plants} list={list} groupBy={groupBy} setGroupBy={setGroupBy} onOpen={open} onPatch={patch} />
+    if (view === 'sheet') return <SheetView list={list} onPatch={patch} />
     if (gmode === 'genus' && !searching && gsel == null)
       return view === 'cards'
         ? <GenusCards list={list} photos={photos} onOpen={setGsel} />
@@ -114,7 +117,7 @@ export default function App() {
                 </div>
               </div>
             )}
-            <div className="ctl">
+            {(view === 'shelf' || view === 'cards') && <div className="ctl">
               <div className="seg2">
                 <button className={gmode === 'genus' ? 'on' : ''} onClick={() => { setGmode('genus'); setGsel(null) }}>By genus</button>
                 <button className={gmode === 'every' ? 'on' : ''} onClick={() => { setGmode('every'); setGsel(null) }}>Every plant</button>
@@ -123,7 +126,7 @@ export default function App() {
                 <option value="name">Sort: name</option><option value="seller">Sort: seller</option>
                 <option value="stage">Sort: stage</option><option value="newest">Sort: newest</option>
               </select>
-            </div>
+            </div>}
             {body()}
           </>
         )}
