@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Plant } from '../lib/types'
+import SellBadge from './SellBadge'
 import { HumiditySelect, MediumSelect, PlaceLabel } from './Selects'
 import { LABEL, PLACE, STAGES, haveish, labelNums, labelPatch, placeOf, placePatch, stageRank, whereOf, type GroupBy } from '../lib/helpers'
 
@@ -17,7 +18,7 @@ function Row({ p, nums, onOpen, onPatch, select, picked, toggle }: { p: Plant; n
         {select && <input type="checkbox" checked={picked} onChange={() => toggle(p.id)} aria-label={'Select ' + p.plant_name} style={{ width: 22, height: 22, flex: '0 0 auto' }} />}
         <button className="nm" onClick={() => (select ? toggle(p.id) : onOpen(p.id))}>
           <b>{p.plant_name}</b>
-          <small>{p.plant_id || ''} · {nums[p.id]}{p.for_sale && !p.sold ? ' · for sale' : ''}{p.sold ? ' · sold' : ''}</small>
+          <small>{p.plant_id || ''} · {nums[p.id]} <SellBadge p={p} /></small>
         </button>
         <div style={{ minWidth: 150 }}><PlaceLabel p={p} onPatch={onPatch} /></div>
       </div>

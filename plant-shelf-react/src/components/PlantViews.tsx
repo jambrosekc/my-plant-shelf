@@ -2,6 +2,7 @@ import type { Plant, PlantPhoto } from '../lib/types'
 import { genusGroups, repPlant, labelNums } from '../lib/helpers'
 import { PlaceLabel } from './Selects'
 import PlantArt from './PlantArt'
+import SellBadge from './SellBadge'
 
 type Photos = Record<string, PlantPhoto[]>
 const HINT = { fontStyle: 'italic', fontFamily: 'var(--display)', fontSize: 20, margin: '14px 0 0' } as const
@@ -62,6 +63,7 @@ export function IllusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Ph
           <div className="irow">
             {g[k].map((p) => (
               <div key={p.id} className={'icell' + (p.have_it || p.shipping ? '' : ' off')} onClick={() => onOpen(p.id)}>
+                <SellBadge p={p} corner />
                 <PlantArt p={p} photos={photos} />
                 <b>{p.plant_name}</b>
                 <em>{p.shipping ? 'on its way' : p.seller_name || ''}</em>
@@ -82,11 +84,12 @@ export function CardGrid({
     <div className="cardgrid">
       {list.map((p) => (
         <div key={p.id} className={'pcard' + (p.have_it || p.shipping ? '' : ' off')}>
+          <SellBadge p={p} corner />
           <button className="pc" onClick={() => onOpen(p.id)}>
             <PlantArt p={p} photos={photos} />
             <b>{p.plant_name}</b>
             <em>{[p.seller_name, p.purchase_stage].filter(Boolean).join(' · ')}</em>
-            <em>{readOnly ? (p.sold ? 'sold' : p.shipping ? 'on its way' : p.for_sale ? 'for sale' + (p.asking_price != null ? ' $' + p.asking_price : '') : '') : `${p.plant_id || ''} · ${nums[p.id]}${p.sold ? ' · sold' : p.for_sale ? ' · for sale' : ''}`}</em>
+            <em>{readOnly ? (p.shipping && !p.sold ? 'on its way' : '') : `${p.plant_id || ''} · ${nums[p.id]}`}</em>
           </button>
           {readOnly || !onWhere ? null : <PlaceLabel p={p} onPatch={onWhere} />}
         </div>

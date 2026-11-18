@@ -28,7 +28,7 @@ export function HumiditySelect({ value, onChange, blank = 'Humidity', ...rest }:
 export function PlaceLabel({ p, onPatch }: { p: Plant; onPatch: (id: string, c: Partial<Plant>) => void }) {
   const have = placeOf(p) === 'have'
   return (
-    <div style={{ display: 'flex', gap: 6 }}>
+    <div className="plwrap" style={{ display: 'flex', gap: 6 }}>
       <select className={'wsel w-' + whereOf(p)} aria-label="Where is it" value={placeOf(p)} onChange={(e) => onPatch(p.id, placePatch(e.target.value))} style={{ flex: 1, minWidth: 0 }}>
         {PLACE.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
