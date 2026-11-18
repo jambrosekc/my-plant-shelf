@@ -12,7 +12,8 @@ const TOGGLES: [keyof Profile, string][] = [
 ]
 
 export default function ShareView({ prof, save, error, flash }: { prof: Profile; save: (p: Partial<Profile>) => void; error: string; flash: (m: string) => void }) {
-  const [slug, setSlug] = useState(prof.public_slug)
+  const [rawSlug, setSlug] = useState(prof.public_slug)
+  const slug = rawSlug
   if (!prof.ready)
     return <div className="card"><h3>Sharing</h3><p className="mut">Sharing needs one more database update. Run Part 3 from the setup files in Supabase, then reload this page.</p></div>
 
@@ -50,8 +51,9 @@ export default function ShareView({ prof, save, error, flash }: { prof: Profile;
           </div>
           <label style={{ marginTop: 14 }}>Your username (it becomes your link)</label>
           <div className="row">
-            <input type="text" maxLength={30} autoCapitalize="off" autoComplete="off" value={slug} onChange={(e) => setSlug(cleanSlug(e.target.value))} style={{ flex: 1 }} />
+            <input type="text" maxLength={30} autoCapitalize="off" autoComplete="off" value={rawSlug} onChange={(e) => setSlug(cleanSlug(e.target.value))} style={{ flex: 1 }} />
             <button className="btn" onClick={() => {
+              const slug = rawSlug.replace(/-+$/, '')
               if (slug.length < 3) return flash('Use at least 3 letters or numbers')
               if (slug === prof.public_slug) return flash('That is already your username')
               save({ public_slug: slug })

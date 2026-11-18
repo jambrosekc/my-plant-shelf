@@ -25,13 +25,14 @@ export default function AuthScreen() {
       const r = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.origin })
       setMsg(r.error ? r.error.message : 'Check your email for a reset link.')
     } else if (mode === 'up') {
-      if (uname.length < 3) { setMsg('Pick a username with at least 3 letters or numbers.'); setBusy(false); return }
-      const ok = await supabase.rpc('username_available', { p_name: uname })
+      const un = uname.replace(/-+$/, '')
+      if (un.length < 3) { setMsg('Pick a username with at least 3 letters or numbers.'); setBusy(false); return }
+      const ok = await supabase.rpc('username_available', { p_name: un })
       if (ok.data === false) { setMsg('That username is taken. Try another.'); setBusy(false); return }
       const r = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { shelf_name: shelf.trim() || 'My Shelf', username: uname } },
+        options: { data: { shelf_name: shelf.trim() || 'My Shelf', username: un } },
       })
       if (r.error) setMsg(r.error.message)
       else if (!r.data.session) setMsg('Check your email to confirm your account, then sign in.')
