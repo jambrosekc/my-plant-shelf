@@ -5,6 +5,11 @@ import PlantArt from './PlantArt'
 import SellBadge from './SellBadge'
 
 type Photos = Record<string, PlantPhoto[]>
+function SaleDot({ items }: { items: Plant[] }) {
+  const n = items.filter((p) => p.for_sale && !p.sold).length
+  if (!n) return null
+  return <span className="gsale" title={`${n} of ${items.length} for sale`}><i />{n}/{items.length}</span>
+}
 const HINT = { fontStyle: 'italic', fontFamily: 'var(--display)', fontSize: 20, margin: '14px 0 0' } as const
 
 export function GenusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Photos; onOpen: (g: string) => void }) {
@@ -19,6 +24,7 @@ export function GenusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Ph
           <div className="grow">
             {row.map((g) => (
               <button key={g.k} className="gpot" onClick={() => onOpen(g.k)}>
+                <SaleDot items={g.items} />
                 <span className="gbub">×{g.items.length}</span>
                 <PlantArt p={repPlant(g.items)} photos={photos} />
                 <span className="gname">{g.k}</span>
@@ -41,10 +47,11 @@ export function GenusCards({ list, photos, onOpen }: { list: Plant[]; photos: Ph
           <button key={g.k} className="gcard" onClick={() => onOpen(g.k)}>
             <div className="gtop"><span><i /><i /><i /></span><span>GENUS</span></div>
             <div className="gbody">
+              <SaleDot items={g.items} />
               <span className="gbub">×{g.items.length}</span>
               <PlantArt p={repPlant(g.items)} photos={photos} />
             </div>
-            <div className="gfoot"><b>{g.k}</b><span>{g.items.length} plant{g.items.length > 1 ? 's' : ''}</span></div>
+            <div className="gfoot"><b>{g.k}</b><span>{g.items.length} plant{g.items.length > 1 ? 's' : ''}{g.items.some((p) => p.for_sale && !p.sold) ? ` · ${g.items.filter((p) => p.for_sale && !p.sold).length} for sale` : ''}</span></div>
           </button>
         ))}
       </div>
