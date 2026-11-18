@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { newPhotoPath } from './image'
 import type { Plant, PlantPhoto } from './types'
 
 export function usePlants(userId: string | undefined) {
@@ -37,5 +38,50 @@ export function usePlants(userId: string | undefined) {
     }
   }
 
-  return { plants, photos, loading, error, reload: load, patch }
+  async function remove(id: string) {
+    const ph = photos[id] ?? []
+    if (ph.length) await supabase.storage.from('plant-photos').remove(ph.map((x) => x.path))
+    const r = await supabase.from('plants').delete().eq('id', id)
+    if (r.error) return setError(r.error.message)
+    setPlants((l) => l.filter((p) => p.id !== id))
+    setPhotos((m) => {
+      const n = { ...m }
+      delete n[id]
+      return n
+    })
+  }
+
+  async function addPhoto(plantId: string, userId: string, blob: Blob) {
+    const path = newPhotoPath(userId, plantId)
+    const up = await supabase.storage.from('plant-photos').upload(path, blob, { contentType: 'image/jpeg' })
+    if (up.error) return up.error.message
+    const list = photos[plantId] ?? []
+    const position = list.length ? Math.max(...list.map((x) => x.position)) + 1 : 0
+    const ins = await supabase.from('plant_photos').insert([{ plant_id: plantId, path, position }]).select()
+    if (ins.error) return ins.error.message
+    setPhotos((m) => ({ ...m, [plantId]: [...(m[plantId] ?? []), ...(ins.data as PlantPhoto[])] }))
+    return ''
+  }
+
+  async function deletePhoto(plantId: string, id: string) {
+    const x = (photos[plantId] ?? []).find((y) => y.id === id)
+    if (!x) return
+    await supabase.storage.from('plant-photos').remove([x.path])
+    const r = await supabase.from('plant_photos').delete().eq('id', id)
+    if (r.error) return setError(r.error.message)
+    setPhotos((m) => ({ ...m, [plantId]: (m[plantId] ?? []).filter((y) => y.id !== id) }))
+  }
+
+  async function makeCover(plantId: string, id: string) {
+    const list = photos[plantId] ?? []
+    const min = Math.min(...list.map((y) => y.position))
+    const r = await supabase.from('plant_photos').update({ position: min - 1 }).eq('id', id)
+    if (r.error) return setError(r.error.message)
+    setPhotos((m) => ({
+      ...m,
+      [plantId]: (m[plantId] ?? []).map((y) => (y.id === id ? { ...y, position: min - 1 } : y)).sort((a, b) => a.position - b.position),
+    }))
+  }
+
+  return { plants, photos, loading, error, reload: load, patch, remove, addPhoto, deletePhoto, makeCover }
 }

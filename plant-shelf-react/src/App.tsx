@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AuthScreen from './components/AuthScreen'
 import NewPassword from './components/NewPassword'
 import Hero from './components/Hero'
+import PlantModal from './components/PlantModal'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf } from './components/PlantViews'
 import { supabase } from './lib/supabase'
 import { useAuth } from './lib/useAuth'
@@ -14,7 +15,8 @@ const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catc
 
 export default function App() {
   const { user, loading, recovery, clearRecovery } = useAuth()
-  const { plants, photos, loading: plantsLoading, error, patch } = usePlants(user?.id)
+  const { plants, photos, loading: plantsLoading, error, patch, remove, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
+  const [modalId, setModalId] = useState<string | null>(null)
   const [theme, setTheme] = useState(() => store('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
   const [view, setView] = useState<View>(() => store('view', 'shelf') as View)
   const [gmode, setGmode] = useState<'genus' | 'every'>('genus')
@@ -38,7 +40,8 @@ export default function App() {
 
   const shelf = (user.user_metadata?.shelf_name as string) || 'My Shelf'
   const searching = !!q || filter !== 'all'
-  const open = (_id: string) => { /* plant sheet arrives in the next update */ }
+  const open = (id: string) => setModalId(id)
+  const modalPlant = plants.find((p) => p.id === modalId)
 
   function body() {
     if (view === 'list' || view === 'sheet')
@@ -125,6 +128,18 @@ export default function App() {
           </>
         )}
       </div>
+      {modalPlant && (
+        <PlantModal
+          plant={modalPlant}
+          photos={photos[modalPlant.id] ?? []}
+          onClose={() => setModalId(null)}
+          onPatch={patch}
+          onDelete={remove}
+          onAddPhoto={(id, blob) => addPhoto(id, user.id, blob)}
+          onDeletePhoto={deletePhoto}
+          onMakeCover={makeCover}
+        />
+      )}
     </>
   )
 }
