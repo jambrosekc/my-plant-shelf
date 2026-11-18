@@ -21,3 +21,12 @@
 .gdots em{font-style:normal;font-size:11px;font-weight:700;color:#3f8f5a;margin-left:4px}
 .gdots .gbar{display:inline-block;width:70px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .gdots .gbar u{display:block;height:100%;background:#3f8f5a}
+
+/* Frosted glass */
+html body{background-image:radial-gradient(60vmax 60vmax at 8% 0%,rgba(130,175,140,.7),transparent 60%),radial-gradient(55vmax 55vmax at 100% 35%,rgba(225,195,140,.65),transparent 60%),radial-gradient(60vmax 60vmax at 0% 100%,rgba(110,175,160,.6),transparent 60%);background-attachment:fixed}
+:root[data-theme=dark] body{background-image:radial-gradient(60vmax 60vmax at 8% 0%,rgba(80,130,100,.45),transparent 60%),radial-gradient(55vmax 55vmax at 100% 35%,rgba(120,105,70,.35),transparent 60%),radial-gradient(60vmax 60vmax at 0% 100%,rgba(50,100,90,.4),transparent 60%)}
+.card,.plant,.pcard,.gcard,.pick,.pot,.chip,.tab,.sheetwrap,.menu,.msheet,.gbub,.seg button:not(.on),.rad,.wsel,.tg{background:color-mix(in srgb,var(--card) 55%,transparent);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);border-color:rgba(255,255,255,.35)}
+:root[data-theme=dark] .card,:root[data-theme=dark] .plant,:root[data-theme=dark] .pcard,:root[data-theme=dark] .gcard,:root[data-theme=dark] .pick,:root[data-theme=dark] .pot,:root[data-theme=dark] .chip,:root[data-theme=dark] .tab,:root[data-theme=dark] .sheetwrap,:root[data-theme=dark] .menu,:root[data-theme=dark] .msheet,:root[data-theme=dark] .gbub{border-color:rgba(255,255,255,.12)}
+.menu,.msheet{background:color-mix(in srgb,var(--card) 80%,transparent)}
+.gcard{box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.gbody{background:color-mix(in srgb,var(--card2) 50%,transparent)}
