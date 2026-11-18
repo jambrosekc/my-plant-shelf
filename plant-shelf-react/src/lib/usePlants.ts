@@ -68,6 +68,30 @@ export function usePlants(userId: string | undefined) {
     })
   }
 
+  async function removeMany(ids: string[]) {
+    const paths = ids.flatMap((id) => (photos[id] ?? []).map((x) => x.path))
+    for (let i = 0; i < paths.length; i += 100) await supabase.storage.from('plant-photos').remove(paths.slice(i, i + 100))
+    for (let i = 0; i < ids.length; i += 100) {
+      const r = await supabase.from('plants').delete().in('id', ids.slice(i, i + 100))
+      if (r.error) { setError(r.error.message); await load(); return r.error.message }
+    }
+    const gone = new Set(ids)
+    setPlants((l) => l.filter((p) => !gone.has(p.id)))
+    setPhotos((m) => Object.fromEntries(Object.entries(m).filter(([k]) => !gone.has(k))))
+    return ''
+  }
+
+  async function patchMany(ids: string[], changes: Partial<Plant>) {
+    const set = new Set(ids)
+    const before = plants
+    setPlants((l) => l.map((p) => (set.has(p.id) ? { ...p, ...changes } : p)))
+    for (let i = 0; i < ids.length; i += 100) {
+      const r = await supabase.from('plants').update(changes).in('id', ids.slice(i, i + 100))
+      if (r.error) { setPlants(before); setError(r.error.message); return r.error.message }
+    }
+    return ''
+  }
+
   async function addPhoto(plantId: string, userId: string, blob: Blob) {
     const path = newPhotoPath(userId, plantId)
     const up = await supabase.storage.from('plant-photos').upload(path, blob, { contentType: 'image/jpeg' })
@@ -100,5 +124,5 @@ export function usePlants(userId: string | undefined) {
     }))
   }
 
-  return { plants, photos, loading, error, reload: load, patch, addPlants, remove, addPhoto, deletePhoto, makeCover }
+  return { plants, photos, loading, error, reload: load, patch, addPlants, remove, removeMany, patchMany, addPhoto, deletePhoto, makeCover }
 }

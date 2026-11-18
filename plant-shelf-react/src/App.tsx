@@ -19,7 +19,7 @@ const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catc
 
 export default function App() {
   const { user, loading, recovery, clearRecovery } = useAuth()
-  const { plants, photos, loading: plantsLoading, error, patch, addPlants, remove, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
+  const { plants, photos, loading: plantsLoading, error, patch, addPlants, remove, removeMany, patchMany, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
   const [modalId, setModalId] = useState<string | null>(null)
   const [theme, setTheme] = useState(() => store('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
   const [view, setView] = useState<View>(() => store('view', 'shelf') as View)
@@ -53,7 +53,7 @@ export default function App() {
   const modalPlant = plants.find((p) => p.id === modalId)
 
   function body() {
-    if (view === 'list') return <ListView all={plants} list={list} groupBy={groupBy} setGroupBy={setGroupBy} onOpen={open} onPatch={patch} />
+    if (view === 'list') return <ListView all={plants} list={list} groupBy={groupBy} setGroupBy={setGroupBy} onOpen={open} onPatch={patch} onBulkDelete={removeMany} onBulkPatch={patchMany} />
     if (view === 'sheet') return <SheetView list={list} onPatch={patch} />
     if (gmode === 'genus' && !searching && gsel == null)
       return view === 'cards'
