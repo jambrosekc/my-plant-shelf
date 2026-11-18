@@ -59,7 +59,7 @@ export default function ShareView({ prof, save, error, flash }: { prof: Profile;
             }}>Save</button>
           </div>
           <p className="mut">
-            3 to 30 letters, numbers, dashes or underscores. Someone else may already have the one you want.{' '}
+            3 to 30 letters or numbers. Spaces and symbols are removed. Someone else may already have the one you want.{' '}
             <button className="link" style={{ color: 'var(--sage-d)' }} onClick={() => {
               if (confirm('The old link will stop working. Continue?')) { const n = newSlug(); setSlug(n); save({ public_slug: n }) }
             }}>Use a random link instead</button>

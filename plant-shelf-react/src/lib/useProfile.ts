@@ -60,7 +60,7 @@ export function useProfile(userId: string | undefined) {
   return { prof, save, error }
 }
 
-export const cleanSlug = (v: string) => v.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').replace(/-{2,}/g, '-').replace(/^-/, '').slice(0, 30)
+export const cleanSlug = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30)
 export function newSlug() {
   const a = new Uint8Array(6)
   crypto.getRandomValues(a)

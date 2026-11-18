@@ -72,7 +72,7 @@ export default function AuthScreen() {
                 const r = await supabase.rpc('username_available', { p_name: uname })
                 if (!r.error) setUnameMsg(r.data ? 'Available' : 'Taken. Try another.')
               }}
-              placeholder="e.g. jess-plants"
+              placeholder="e.g. jessplants"
             />
             {unameMsg && <p className="mut" style={{ margin: '4px 0 0' }}>{unameMsg}</p>}
           </>
