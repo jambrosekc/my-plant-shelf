@@ -13,6 +13,7 @@ import DiscoverView from './components/DiscoverView'
 import FavoritesView from './components/FavoritesView'
 import FeedView from './components/FeedView'
 import SearchView from './components/SearchView'
+import GenusFixer from './components/GenusFixer'
 import { Compass, Heart, Home, Search, Sparkles, X } from 'lucide-react'
 import { useProfile } from './lib/useProfile'
 import PlantModal from './components/PlantModal'
@@ -147,6 +148,7 @@ export default function App() {
         ) : (
           <>
             <Hero shelf={shelf} plants={plants} onPick={open} />
+            <GenusFixer plants={plants} onApply={patchMany} />
             <div className="seg">
               {(['shelf', 'cards', 'list', 'sheet'] as View[]).map((v) => (
                 <button key={v} className={view === v ? 'on' : ''} onClick={() => { setView(v); save('view', v) }}>
