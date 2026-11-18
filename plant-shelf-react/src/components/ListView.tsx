@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Plant } from '../lib/types'
 import { HumiditySelect, MediumSelect, PlaceLabel } from './Selects'
-import { STAGES, WHERE, haveish, labelNums, stageRank, whereOf, wherePatch, type GroupBy } from '../lib/helpers'
+import { LABEL, PLACE, STAGES, haveish, labelNums, labelPatch, placeOf, placePatch, stageRank, whereOf, type GroupBy } from '../lib/helpers'
 
 const byName = (a: Plant, b: Plant) => ((a.plant_name || '').toLowerCase() < (b.plant_name || '').toLowerCase() ? -1 : 1)
 const NA = 'Seller not set'
@@ -19,7 +19,7 @@ function Row({ p, nums, onOpen, onPatch, select, picked, toggle }: { p: Plant; n
           <b>{p.plant_name}</b>
           <small>{p.plant_id || ''} · {nums[p.id]}{p.for_sale && !p.sold ? ' · for sale' : ''}{p.sold ? ' · sold' : ''}</small>
         </button>
-        <PlaceLabel p={p} onPatch={onPatch} />
+        <div style={{ minWidth: 150 }}><PlaceLabel p={p} onPatch={onPatch} /></div>
       </div>
     </div>
   )
@@ -49,6 +49,13 @@ export default function ListView({
     const e = await onBulkDelete(picked)
     if (e) setMsg('Could not delete: ' + e)
     else exit()
+  }
+  async function bulkLabel(v: string) {
+    const ids = picked.filter((id) => { const p = all.find((x) => x.id === id); return p && placeOf(p) === 'have' })
+    if (!ids.length) return setMsg('Labels only apply to plants marked Have it.')
+    const e = await onBulkPatch(ids, labelPatch(v))
+    const skipped = picked.length - ids.length
+    setMsg(e ? 'Could not save: ' + e : `Updated ${ids.length}.` + (skipped ? ` Skipped ${skipped} that are not marked Have it.` : ''))
   }
   async function bulkPatch(c: Partial<Plant>) {
     const e = await onBulkPatch(picked, c)
@@ -126,9 +133,13 @@ export default function ListView({
             </span>
           </div>
           <div className="row" style={{ marginTop: 8 }}>
-            <select disabled={!picked.length} value="" onChange={(e) => e.target.value && bulkPatch(wherePatch(e.target.value))}>
+            <select disabled={!picked.length} value="" onChange={(e) => e.target.value && bulkPatch(placePatch(e.target.value))}>
               <option value="">Set where...</option>
-              {WHERE.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}
+              {PLACE.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}
+            </select>
+            <select disabled={!picked.length} value="" onChange={(e) => e.target.value && bulkLabel(e.target.value)}>
+              <option value="">Set label...</option>
+              {LABEL.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}
             </select>
             <select disabled={!picked.length} value="" onChange={(e) => e.target.value && bulkPatch({ purchase_stage: e.target.value })}>
               <option value="">Set stage...</option>

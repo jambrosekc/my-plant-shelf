@@ -2,7 +2,7 @@ import { useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { Camera, Star, Trash2, X } from 'lucide-react'
 import type { Plant, PlantPhoto } from '../lib/types'
-import { STAGES, WHERE, humidityLabel, sellOf, whereOf, wherePatch } from '../lib/helpers'
+import { LABEL, PLACE, STAGES, humidityLabel, labelOf, labelPatch, placeOf, placePatch, sellOf } from '../lib/helpers'
 import { photoUrl } from '../lib/supabase'
 import { HumiditySelect, MediumSelect } from './Selects'
 import PhotoCropper from './PhotoCropper'
@@ -107,7 +107,13 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
         {msg && <p className="mut">{msg}</p>}
 
         <div className="sec">Where is it?</div>
-        <div className="flags">{WHERE.map((w) => chip(whereOf(p) === w[0], w[1], () => onPatch(p.id, wherePatch(w[0]))))}</div>
+        <div className="flags">{PLACE.map((w) => chip(placeOf(p) === w[0], w[1], () => onPatch(p.id, placePatch(w[0]))))}</div>
+        {placeOf(p) === 'have' && (
+          <>
+            <div className="sec">Label</div>
+            <div className="flags">{LABEL.map((w) => chip(labelOf(p) === w[0], w[1], () => onPatch(p.id, labelPatch(w[0]))))}</div>
+          </>
+        )}
         <div className="sec">Care</div>
         <div className="flags">
           {chip(p.to_repot, 'Needs repot', () => onPatch(p.id, { to_repot: !p.to_repot }))}
