@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import type { Plant } from '../lib/types'
-import { LABEL, PLACE, STAGES, labelPatch, placePatch } from '../lib/helpers'
+import { STAGES, WHERE, wherePatch } from '../lib/helpers'
 import { HumiditySelect, MediumSelect } from './Selects'
 import { toNum } from '../lib/importer'
 
 const SELL: [string, string][] = [['none', 'Not selling'], ['sale', 'For sale'], ['sold', 'Sold']]
 
 export default function AddPlant({ onAdd, done }: { onAdd: (rows: Record<string, unknown>[]) => Promise<{ error: string }>; done: (name: string) => void }) {
-  const [f, setF] = useState<Record<string, string>>({ where: 'have', label: 'print', sell: 'none' })
+  const [f, setF] = useState<Record<string, string>>({ where: 'print', sell: 'none' })
   const [repot, setRepot] = useState(false)
   const [water, setWater] = useState(false)
   const [msg, setMsg] = useState('')
@@ -35,8 +35,7 @@ export default function AddPlant({ onAdd, done }: { onAdd: (rows: Record<string,
       to_water: water,
       asking_price: f.sell === 'sale' ? toNum(f.ask) : null,
       notes: f.notes?.trim() || null,
-      ...placePatch(f.where),
-      ...(f.where === 'have' ? labelPatch(f.label) : {}),
+      ...wherePatch(f.where),
       for_sale: f.sell === 'sale',
       sold: f.sell === 'sold',
     }
@@ -76,8 +75,7 @@ export default function AddPlant({ onAdd, done }: { onAdd: (rows: Record<string,
           {txt('water', 'Last watered', 'date')}
         </div>
         <div className="sec">1. Where is it?</div>
-        {radios('where', PLACE)}
-        {f.where === 'have' && (<><div className="sec">Label</div>{radios('label', LABEL)}</>)}
+        {radios('where', WHERE)}
         <div className="sec">2. Care</div>
         <div className="flags">
           <label className="rad"><input type="checkbox" checked={repot} onChange={(e) => setRepot(e.target.checked)} /> Needs repot</label>
