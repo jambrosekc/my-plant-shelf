@@ -30,3 +30,6 @@ html body{background-image:radial-gradient(60vmax 60vmax at 8% 0%,rgba(130,175,1
 .menu,.msheet{background:color-mix(in srgb,var(--card) 80%,transparent)}
 .gcard{box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .gbody{background:color-mix(in srgb,var(--card2) 50%,transparent)}
+
+.pcard,.icell{position:relative}
+.heartbtn{position:absolute;top:6px;right:6px;z-index:3;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 80%,transparent);color:var(--mut);padding:0}

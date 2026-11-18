@@ -44,7 +44,7 @@ export default function DiscoverView({ userId, mineSlug }: { userId: string; min
           </div>
           <div className="seg" style={{ marginBottom: 10 }}>
             <button className={!onlyFollowing ? 'on' : ''} onClick={() => setOnlyFollowing(false)}>Everyone</button>
-            <button className={onlyFollowing ? 'on' : ''} onClick={() => setOnlyFollowing(true)}>Following</button>
+            <button className={onlyFollowing ? 'on' : ''} onClick={() => setOnlyFollowing(true)}>Following ({(shelves ?? []).filter((x) => x.following).length})</button>
           </div>
           {!list.length && <p className="mut">{onlyFollowing ? 'You are not following anyone yet.' : 'No public shelves found.'}</p>}
           {list.map((s) => (

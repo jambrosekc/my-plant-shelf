@@ -4,7 +4,7 @@ import { LIGHTS } from '../lib/art'
 import { gkey, genusGroups, sortList } from '../lib/helpers'
 import { Heart } from 'lucide-react'
 import { supabase, photoUrl } from '../lib/supabase'
-import { CardGrid, GenusCards, GenusShelf, IllusShelf } from './PlantViews'
+import { CardGrid, GenusCards, GenusShelf, IllusShelf, type FavApi } from './PlantViews'
 
 interface Pub { owner_id?: string; shelf_name: string; show_prices: boolean; plants: (Plant & { photos?: string[] })[] }
 
@@ -127,6 +127,7 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
     return <>{banner}{top}<div className="wrap"><div className="card"><h3>This shelf is private</h3><p className="mut">The owner has not shared it, or the link has changed.</p></div></div></>
 
   const searching = !!q
+  const fav: FavApi | undefined = userId ? { has: (p) => favs.has(String((p as { uid?: string }).uid)), toggle: (p) => toggleHeart(String((p as { uid?: string }).uid)) } : undefined
   const open = (id: string) => setModal(id)
   let body
   if (!searching && gsel == null) {
@@ -142,8 +143,8 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
     }
     sub = sortList(sub, 'name')
     body = <>{head}{!sub.length ? <p className="mut">Nothing matches.</p> : view === 'cards'
-      ? <CardGrid list={sub} all={plants} photos={photos} onOpen={open} readOnly />
-      : <IllusShelf list={sub} photos={photos} onOpen={open} />}</>
+      ? <CardGrid list={sub} all={plants} photos={photos} onOpen={open} readOnly fav={fav} />
+      : <IllusShelf list={sub} photos={photos} onOpen={open} fav={fav} />}</>
   }
   const modalPlant = plants.find((p) => p.id === modal) as (typeof plants)[number] & { uid?: string } | undefined
 

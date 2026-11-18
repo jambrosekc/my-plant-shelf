@@ -1,3 +1,4 @@
+import { Heart } from 'lucide-react'
 import type { Plant, PlantPhoto } from '../lib/types'
 import { genusGroups, repPlant, labelNums } from '../lib/helpers'
 import { PlaceLabel } from './Selects'
@@ -15,6 +16,16 @@ function SaleDots({ items }: { items: Plant[] }) {
       <i className="on" />
       <em>{n}/{total}</em>
     </span>
+  )
+}
+export interface FavApi { has: (p: Plant) => boolean; toggle: (p: Plant) => void }
+function HeartBtn({ p, fav }: { p: Plant; fav?: FavApi }) {
+  if (!fav) return null
+  const on = fav.has(p)
+  return (
+    <button className="heartbtn" aria-label={on ? 'Remove from favorites' : 'Add to favorites'} onClick={(e) => { e.stopPropagation(); fav.toggle(p) }}>
+      <Heart size={18} fill={on ? '#c0392b' : 'none'} color={on ? '#c0392b' : 'currentColor'} />
+    </button>
   )
 }
 const HINT = { fontStyle: 'italic', fontFamily: 'var(--display)', fontSize: 20, margin: '14px 0 0' } as const
@@ -65,7 +76,7 @@ export function GenusCards({ list, photos, onOpen }: { list: Plant[]; photos: Ph
   )
 }
 
-export function IllusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Photos; onOpen: (id: string) => void }) {
+export function IllusShelf({ list, photos, onOpen, fav }: { list: Plant[]; photos: Photos; onOpen: (id: string) => void; fav?: FavApi }) {
   const g: Record<string, Plant[]> = {}
   list.forEach((p) => (g[p.genus || 'Other'] ??= []).push(p))
   return (
@@ -77,6 +88,7 @@ export function IllusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Ph
             {g[k].map((p) => (
               <div key={p.id} className={'icell' + (p.have_it || p.shipping ? '' : ' off')} onClick={() => onOpen(p.id)}>
                 <SellBadge p={p} corner />
+                <HeartBtn p={p} fav={fav} />
                 <PlantArt p={p} photos={photos} />
                 <b>{p.plant_name}</b>
                 <em>{p.shipping ? 'on its way' : p.seller_name || ''}</em>
@@ -90,14 +102,15 @@ export function IllusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Ph
 }
 
 export function CardGrid({
-  list, all, photos, onOpen, onWhere, readOnly,
-}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean }) {
+  list, all, photos, onOpen, onWhere, readOnly, fav,
+}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean; fav?: FavApi }) {
   const nums = labelNums(all)
   return (
     <div className="cardgrid">
       {list.map((p) => (
         <div key={p.id} className={'pcard' + (p.have_it || p.shipping ? '' : ' off')}>
           <SellBadge p={p} corner />
+          <HeartBtn p={p} fav={fav} />
           <button className="pc" onClick={() => onOpen(p.id)}>
             <PlantArt p={p} photos={photos} />
             <b>{p.plant_name}</b>

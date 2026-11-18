@@ -11,6 +11,7 @@ import PublicView from './components/PublicView'
 import ShareView from './components/ShareView'
 import DiscoverView from './components/DiscoverView'
 import FavoritesView from './components/FavoritesView'
+import FeedView from './components/FeedView'
 import { useProfile } from './lib/useProfile'
 import PlantModal from './components/PlantModal'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf } from './components/PlantViews'
@@ -37,7 +38,7 @@ export default function App() {
   const [groupBy, setGroupBy] = useState<GroupBy>('seller')
   const [q, setQ] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [tab, setTab] = useState<'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs'>('home')
+  const [tab, setTab] = useState<'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed'>('home')
   const { prof, save: saveProf, error: profError } = useProfile(user?.id)
   const [toast, setToast] = useState('')
 
@@ -57,7 +58,7 @@ export default function App() {
   const shelf = (user.user_metadata?.shelf_name as string) || 'My Shelf'
   const searching = !!q || filter !== 'all'
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3000) }
-  const go = (t: 'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
+  const go = (t: 'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
   const open = (id: string) => setModalId(id)
   const modalPlant = plants.find((p) => p.id === modalId)
 
@@ -107,6 +108,7 @@ export default function App() {
         <div className="menu">
           <button onClick={() => go('add')}>Add a plant</button>
           <button onClick={() => go('imp')}>Import from Excel</button>
+          <button onClick={() => go('feed')}>New plants</button>
           <button onClick={() => go('discover')}>Discover shelves</button>
           <button onClick={() => go('favs')}>My favorites</button>
           <button onClick={() => go('share')}>Share my shelf</button>
@@ -120,6 +122,8 @@ export default function App() {
             <button className="link back" onClick={() => go('home')}>← Back to my plants</button>
             {tab === 'add'
               ? <AddPlant onAdd={addPlants} done={(n) => { flash('Added ' + n); go('home') }} />
+              : tab === 'feed'
+              ? <FeedView userId={user.id} />
               : tab === 'discover'
               ? <DiscoverView userId={user.id} mineSlug={prof.public_slug} />
               : tab === 'favs'
