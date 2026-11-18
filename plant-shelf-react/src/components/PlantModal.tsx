@@ -136,8 +136,10 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
                 <div key={k}><label>{l}</label><input type={t} value={draft[k]} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })} /></div>
               ))}
             </div>
-            <label>Notes</label>
-            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
+            <div className="sec">Notes</div>
+            <textarea className="notes-edit" value={draft.notes} placeholder="Care notes, where it came from, anything to remember..."
+              onChange={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; setDraft({ ...draft, notes: e.target.value }) }}
+              ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 220) + 'px' } }} />
             <div className="row" style={{ marginTop: 14 }}>
               <button className="btn" onClick={saveEdit}>Save changes</button>
               <button className="btn alt" onClick={() => setEdit(false)}>Cancel</button>
@@ -148,8 +150,10 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
             <dl className="kv">
               {kv('Genus', p.genus)}{kv('Stage', p.purchase_stage)}{kv('Seller', p.seller_name)}{kv('Where bought', p.sourced_from)}
               {kv('Paid', p.purchase_price == null ? '' : '$' + p.purchase_price)}{kv('Soil', p.soil_medium)}
-              {kv('Asking price', p.asking_price == null ? '' : '$' + p.asking_price)}{kv('Notes', p.notes)}
+              {kv('Asking price', p.asking_price == null ? '' : '$' + p.asking_price)}
             </dl>
+            <div className="sec">Notes</div>
+            {p.notes ? <div className="notes-read">{p.notes}</div> : <p className="mut">No notes yet.</p>}
             <div className="row" style={{ marginTop: 14 }}>
               <button className="btn" onClick={startEdit}>Edit details</button>
               <button className="btn bad" onClick={() => confirm('Delete this plant?') && (onDelete(p.id), onClose())}>Delete</button>

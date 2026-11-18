@@ -4,3 +4,7 @@
 .auth h1{font-family:var(--display);font-size:28px;display:flex;gap:8px;align-items:center;margin:0 0 4px}
 .msg{font-size:14px;margin:6px 0}
 .links{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.notes-read{white-space:pre-wrap;word-break:break-word;font-size:16px;line-height:1.55;background:var(--card2);border-radius:10px;padding:12px 14px}
+.notes-edit{width:100%;min-height:220px;font-size:16px;line-height:1.55;padding:12px 14px;resize:vertical;overflow:hidden}
+.sheet td.notescell{min-width:280px;white-space:normal;vertical-align:top;line-height:1.45}
+.sheet td.notescell textarea{width:100%;min-height:90px;border:0;background:transparent;font-size:15px;line-height:1.45;padding:7px 8px}

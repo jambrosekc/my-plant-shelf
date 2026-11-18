@@ -103,7 +103,7 @@ export default function SheetView({ list, onPatch }: { list: Plant[]; onPatch: (
               <tr key={p.id}>
                 {COLS.map(([k, , kind]) => {
                   if (kind === 'ro') return <td key={k} className="ro">{p.plant_id || ''}</td>
-                  if (!edit) return <td key={k} className="ro" style={{ color: 'var(--ink)' }}>{label(p, k, kind)}</td>
+                  if (!edit) return <td key={k} className={'ro' + (k === 'notes' ? ' notescell' : '')} style={{ color: 'var(--ink)' }}>{label(p, k, kind)}</td>
                   const v = val(p, k)
                   if (kind === 'b') return <td key={k} className="c"><input type="checkbox" checked={!!v} onChange={(e) => set(p.id, k, e.target.checked)} /></td>
                   if (kind === 'st') {
@@ -113,6 +113,7 @@ export default function SheetView({ list, onPatch }: { list: Plant[]; onPatch: (
                   }
                   if (kind === 'w') return <td key={k}><select value={String(v)} onChange={(e) => set(p.id, k, e.target.value)}>{WHERE.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}</select></td>
                   if (kind === 's') return <td key={k}><select value={String(v)} onChange={(e) => set(p.id, k, e.target.value)}>{SELL.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}</select></td>
+                  if (k === 'notes') return <td key={k} className="notescell"><textarea rows={3} value={String(v)} onChange={(e) => set(p.id, k, e.target.value)} /></td>
                   return <td key={k}><input type={kind === 'n' ? 'number' : 'text'} step={kind === 'n' ? '0.01' : undefined} value={String(v)} onChange={(e) => set(p.id, k, e.target.value)} /></td>
                 })}
               </tr>
