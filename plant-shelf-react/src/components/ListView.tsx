@@ -25,9 +25,9 @@ function Row({ p, nums, onOpen, onPatch, select, picked, toggle }: { p: Plant; n
   )
 }
 
-const WN: Record<string, string> = { missing: "Can't find", ship: 'Shipping', received: 'Have it', print: 'Needs label', labeled: 'Labeled' }
-const WO = ['missing', 'ship', 'received', 'print', 'labeled']
-const LO = ['Needs label', 'Have it, no label yet', 'Labeled', 'Not here yet (shipping or missing)']
+const WN: Record<string, string> = { missing: "Can't find", ship: 'Shipping', print: 'Needs label', labeled: 'Labeled' }
+const WO = ['missing', 'ship', 'print', 'labeled']
+const LO = ['Needs label', 'Labeled', 'Not here yet (shipping or missing)']
 
 export default function ListView({
   all, list, groupBy, setGroupBy, onOpen, onPatch, onBulkDelete, onBulkPatch,
@@ -61,9 +61,9 @@ export default function ListView({
     const e = await onBulkPatch(picked, c)
     setMsg(e ? 'Could not save: ' + e : `Updated ${picked.length} plant${picked.length > 1 ? 's' : ''}`)
   }
-  const c = { ship: 0, missing: 0, received: 0, print: 0, labeled: 0 }
+  const c = { ship: 0, missing: 0, print: 0, labeled: 0 }
   all.forEach((p) => c[whereOf(p)]++)
-  const have = c.received + c.print + c.labeled
+  const have = c.print + c.labeled
   const row = (p: Plant) => <Row key={p.id} p={p} nums={nums} onOpen={onOpen} onPatch={onPatch} select={select} picked={sel.has(p.id)} toggle={toggle} />
 
   function groups() {
@@ -89,7 +89,7 @@ export default function ListView({
       const w = whereOf(p)
       const k = groupBy === 'stage' ? p.purchase_stage || 'Stage not set'
         : groupBy === 'status' ? WN[w]
-        : w === 'labeled' ? 'Labeled' : w === 'print' ? 'Needs label' : w === 'received' ? 'Have it, no label yet' : 'Not here yet (shipping or missing)'
+        : w === 'labeled' ? 'Labeled' : w === 'print' ? 'Needs label' : 'Not here yet (shipping or missing)'
       ;(g[k] ??= []).push(p)
     })
     const rank = (k: string) =>
@@ -109,7 +109,7 @@ export default function ListView({
       <div className="card">
         <div className="stats"><Stat n={all.length} l="Plants" /><Stat n={c.ship} l="Shipping" /><Stat n={have} l="Have it" /><Stat n={c.missing} l="Can't find" /></div>
         <p className="mut" style={{ margin: '6px 0 10px', textAlign: 'center', fontSize: 12 }}>Shipping + Have it + Can't find = Plants</p>
-        <div className="stats" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}><Stat n={c.labeled} l="Labeled" /><Stat n={c.print} l="Needs label" /><Stat n={c.received} l="No label yet" /></div>
+        <div className="stats" style={{ gridTemplateColumns: 'repeat(2,1fr)' }}><Stat n={c.print} l="Needs label" /><Stat n={c.labeled} l="Labeled" /></div>
         <p className="mut" style={{ margin: '6px 0 0', textAlign: 'center', fontSize: 12 }}>Of the ones you have</p>
       </div>
       <div className="ctl">

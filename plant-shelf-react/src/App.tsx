@@ -134,7 +134,7 @@ export default function App() {
               <div className="card" style={{ margin: '6px 0' }}>
                 {([
                   ['Where', [['all', 'All'], ['shipping', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"]]],
-                  ['Label', [['received', 'No label yet'], ['print', 'Needs label'], ['labeled', 'Labeled']]],
+                  ['Label', [['print', 'Needs label'], ['labeled', 'Labeled']]],
                   ['Care', [['repot', 'To repot'], ['water', 'To water']]],
                   ['Selling', [['sale', 'For sale'], ['sold', 'Sold']]],
                 ] as [string, [Filter, string][]][]).map(([lab, arr]) => (

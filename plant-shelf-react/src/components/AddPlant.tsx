@@ -7,7 +7,7 @@ import { toNum } from '../lib/importer'
 const SELL: [string, string][] = [['none', 'Not selling'], ['sale', 'For sale'], ['sold', 'Sold']]
 
 export default function AddPlant({ onAdd, done }: { onAdd: (rows: Record<string, unknown>[]) => Promise<{ error: string }>; done: (name: string) => void }) {
-  const [f, setF] = useState<Record<string, string>>({ where: 'have', label: 'none', sell: 'none' })
+  const [f, setF] = useState<Record<string, string>>({ where: 'have', label: 'print', sell: 'none' })
   const [repot, setRepot] = useState(false)
   const [water, setWater] = useState(false)
   const [msg, setMsg] = useState('')
