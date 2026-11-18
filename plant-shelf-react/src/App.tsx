@@ -6,6 +6,9 @@ import AddPlant from './components/AddPlant'
 import ImportView from './components/ImportView'
 import ListView from './components/ListView'
 import SheetView from './components/SheetView'
+import PublicView from './components/PublicView'
+import ShareView from './components/ShareView'
+import { useProfile } from './lib/useProfile'
 import PlantModal from './components/PlantModal'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf } from './components/PlantViews'
 import { supabase } from './lib/supabase'
@@ -31,7 +34,8 @@ export default function App() {
   const [groupBy, setGroupBy] = useState<GroupBy>('seller')
   const [q, setQ] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [tab, setTab] = useState<'home' | 'add' | 'imp'>('home')
+  const [tab, setTab] = useState<'home' | 'add' | 'imp' | 'share'>('home')
+  const { prof, save: saveProf, error: profError } = useProfile(user?.id)
   const [toast, setToast] = useState('')
 
   useEffect(() => {
@@ -41,6 +45,8 @@ export default function App() {
 
   const list = useMemo(() => plants.filter((p) => passes(p, q, filter)), [plants, q, filter])
 
+  const pubSlug = new URLSearchParams(location.search).get('shelf')
+  if (pubSlug) return loading ? <div className="auth"><p className="mut">Loading...</p></div> : <PublicView slug={pubSlug} mineSlug={user ? prof.public_slug : undefined} />
   if (loading) return <div className="auth"><p className="mut">Loading...</p></div>
   if (recovery) return <NewPassword done={clearRecovery} />
   if (!user) return <AuthScreen />
@@ -48,7 +54,7 @@ export default function App() {
   const shelf = (user.user_metadata?.shelf_name as string) || 'My Shelf'
   const searching = !!q || filter !== 'all'
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3000) }
-  const go = (t: 'home' | 'add' | 'imp') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
+  const go = (t: 'home' | 'add' | 'imp' | 'share') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
   const open = (id: string) => setModalId(id)
   const modalPlant = plants.find((p) => p.id === modalId)
 
@@ -98,6 +104,7 @@ export default function App() {
         <div className="menu">
           <button onClick={() => go('add')}>Add a plant</button>
           <button onClick={() => go('imp')}>Import from Excel</button>
+          <button onClick={() => go('share')}>Share my shelf</button>
           <button onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
       )}
@@ -108,6 +115,8 @@ export default function App() {
             <button className="link back" onClick={() => go('home')}>← Back to my plants</button>
             {tab === 'add'
               ? <AddPlant onAdd={addPlants} done={(n) => { flash('Added ' + n); go('home') }} />
+              : tab === 'share'
+              ? <ShareView prof={prof} save={saveProf} error={profError} flash={flash} />
               : <ImportView onImport={addPlants} done={(n) => { flash('Imported ' + n + ' plants'); go('home') }} />}
           </>
         ) : plantsLoading ? <p className="mut">Loading your plants...</p> : !plants.length ? (

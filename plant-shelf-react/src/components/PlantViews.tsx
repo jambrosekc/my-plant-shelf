@@ -75,8 +75,8 @@ export function IllusShelf({ list, photos, onOpen }: { list: Plant[]; photos: Ph
 }
 
 export function CardGrid({
-  list, all, photos, onOpen, onWhere,
-}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere: (id: string, patch: Partial<Plant>) => void }) {
+  list, all, photos, onOpen, onWhere, readOnly,
+}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean }) {
   const nums = labelNums(all)
   return (
     <div className="cardgrid">
@@ -86,9 +86,9 @@ export function CardGrid({
             <PlantArt p={p} photos={photos} />
             <b>{p.plant_name}</b>
             <em>{[p.seller_name, p.purchase_stage].filter(Boolean).join(' · ')}</em>
-            <em>{p.plant_id || ''} · {nums[p.id]}{p.sold ? ' · sold' : p.for_sale ? ' · for sale' : ''}</em>
+            <em>{readOnly ? (p.sold ? 'sold' : p.shipping ? 'on its way' : p.for_sale ? 'for sale' + (p.asking_price != null ? ' $' + p.asking_price : '') : '') : `${p.plant_id || ''} · ${nums[p.id]}${p.sold ? ' · sold' : p.for_sale ? ' · for sale' : ''}`}</em>
           </button>
-          <PlaceLabel p={p} onPatch={onWhere} />
+          {readOnly || !onWhere ? null : <PlaceLabel p={p} onPatch={onWhere} />}
         </div>
       ))}
     </div>
