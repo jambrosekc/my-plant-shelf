@@ -64,7 +64,7 @@ export function genusGroups(list: Plant[]) {
 
 export const repPlant = (items: Plant[]) => items.find((p) => p.have_it) ?? items[0]
 
-export type Filter = 'all' | 'labeled' | 'missing' | 'received' | 'shipping' | 'print' | 'repot' | 'water' | 'sale' | 'sold'
+export type Filter = 'all' | 'have' | 'labeled' | 'missing' | 'received' | 'shipping' | 'print' | 'repot' | 'water' | 'sale' | 'sold'
 
 export function passes(p: Plant, q: string, filter: Filter): boolean {
   if (q) {
@@ -72,6 +72,7 @@ export function passes(p: Plant, q: string, filter: Filter): boolean {
     if (!s.includes(q.toLowerCase())) return false
   }
   switch (filter) {
+    case 'have': return placeOf(p) === 'have'
     case 'labeled': return whereOf(p) === 'labeled'
     case 'missing': return whereOf(p) === 'missing'
     case 'received': return whereOf(p) === 'received'
@@ -116,3 +117,16 @@ export const humidityLabel = (v: unknown) => {
   const hit = HUMIDITY.find((h) => Number(h[0]) === Number(v))
   return hit ? hit[1] : `${v}%`
 }
+
+// Two separate questions: where is it (one of three), and, if you have it, its label status (one of three).
+export type Place = 'ship' | 'have' | 'missing'
+export type LabelState = 'none' | 'print' | 'labeled'
+export const PLACE: [Place, string][] = [['ship', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"]]
+export const LABEL: [LabelState, string][] = [['none', 'No label yet'], ['print', 'Needs label'], ['labeled', 'Labeled']]
+export const placeOf = (p: Plant): Place => (p.shipping ? 'ship' : !p.have_it ? 'missing' : 'have')
+export const labelOf = (p: Plant): LabelState => (p.labeled ? 'labeled' : p.to_print ? 'print' : 'none')
+export function placePatch(v: string): Partial<Plant> {
+  if (v === 'have') return { shipping: false, have_it: true }
+  return { shipping: v === 'ship', have_it: false, labeled: false, to_print: false }
+}
+export const labelPatch = (v: string): Partial<Plant> => ({ labeled: v === 'labeled', to_print: v === 'print' })

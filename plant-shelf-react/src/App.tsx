@@ -132,11 +132,19 @@ export default function App() {
             </div>
             {filtersOpen && (
               <div className="card" style={{ margin: '6px 0' }}>
-                <div className="chips">
-                  {([['all', 'All'], ['shipping', 'Shipping'], ['received', 'Have it'], ['print', 'Needs label'], ['labeled', 'Labeled'], ['missing', "Can't find"], ['repot', 'To repot'], ['water', 'To water'], ['sale', 'For sale'], ['sold', 'Sold']] as [Filter, string][]).map(([k, l]) => (
-                    <button key={k} className={'chip' + (filter === k ? ' on' : '')} onClick={() => setFilter(k)}>{l}</button>
-                  ))}
-                </div>
+                {([
+                  ['Where', [['all', 'All'], ['shipping', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"]]],
+                  ['Label', [['received', 'No label yet'], ['print', 'Needs label'], ['labeled', 'Labeled']]],
+                  ['Care', [['repot', 'To repot'], ['water', 'To water']]],
+                  ['Selling', [['sale', 'For sale'], ['sold', 'Sold']]],
+                ] as [string, [Filter, string][]][]).map(([lab, arr]) => (
+                  <div className="fgrp" key={lab}>
+                    <span className="flab">{lab}</span>
+                    <div className="chips">
+                      {arr.map(([k, l]) => <button key={k} className={'chip' + (filter === k ? ' on' : '')} onClick={() => setFilter(k)}>{l}</button>)}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
             {(view === 'shelf' || view === 'cards') && <div className="ctl">

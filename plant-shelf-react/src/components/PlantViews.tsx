@@ -1,5 +1,6 @@
 import type { Plant, PlantPhoto } from '../lib/types'
-import { WHERE, genusGroups, repPlant, whereOf, labelNums, wherePatch } from '../lib/helpers'
+import { genusGroups, repPlant, labelNums } from '../lib/helpers'
+import { PlaceLabel } from './Selects'
 import PlantArt from './PlantArt'
 
 type Photos = Record<string, PlantPhoto[]>
@@ -87,9 +88,7 @@ export function CardGrid({
             <em>{[p.seller_name, p.purchase_stage].filter(Boolean).join(' · ')}</em>
             <em>{p.plant_id || ''} · {nums[p.id]}{p.sold ? ' · sold' : p.for_sale ? ' · for sale' : ''}</em>
           </button>
-          <select className={'wsel w-' + whereOf(p)} value={whereOf(p)} onChange={(e) => onWhere(p.id, wherePatch(e.target.value))}>
-            {WHERE.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}
-          </select>
+          <PlaceLabel p={p} onPatch={onWhere} />
         </div>
       ))}
     </div>
