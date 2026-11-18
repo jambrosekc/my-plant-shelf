@@ -6,6 +6,7 @@ import AddPlant from './components/AddPlant'
 import ImportView from './components/ImportView'
 import ListView from './components/ListView'
 import SheetView from './components/SheetView'
+import PrintPanel from './components/PrintPanel'
 import PublicView from './components/PublicView'
 import ShareView from './components/ShareView'
 import { useProfile } from './lib/useProfile'
@@ -156,6 +157,7 @@ export default function App() {
                 ))}
               </div>
             )}
+            <PrintPanel plants={plants} flash={flash} onMarkLabeled={(ids) => patchMany(ids, { labeled: true, to_print: false })} />
             {(view === 'shelf' || view === 'cards') && <div className="ctl">
               <div className="seg2">
                 <button className={gmode === 'genus' ? 'on' : ''} onClick={() => { setGmode('genus'); setGsel(null) }}>By genus</button>
