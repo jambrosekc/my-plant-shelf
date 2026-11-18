@@ -27,9 +27,9 @@ function Row({ p, nums, onOpen, onPatch, select, picked, toggle }: { p: Plant; n
   )
 }
 
-const WN: Record<string, string> = { missing: "Can't find", ship: 'Shipping', received: 'Received, no label yet', print: 'Needs label printed', labeled: 'Labeled' }
+const WN: Record<string, string> = { missing: "Can't find", ship: 'Shipping', received: 'Received', print: 'Needs label', labeled: 'Labeled' }
 const WO = ['missing', 'ship', 'received', 'print', 'labeled']
-const LO = ['Needs label printed', 'Have it, no label yet', 'Labeled', 'Not here yet (shipping or missing)']
+const LO = ['Needs label', 'Have it, no label yet', 'Labeled', 'Not here yet (shipping or missing)']
 
 export default function ListView({
   all, list, groupBy, setGroupBy, onOpen, onPatch, onBulkDelete, onBulkPatch,
@@ -84,7 +84,7 @@ export default function ListView({
       const w = whereOf(p)
       const k = groupBy === 'stage' ? p.purchase_stage || 'Stage not set'
         : groupBy === 'status' ? WN[w]
-        : w === 'labeled' ? 'Labeled' : w === 'print' ? 'Needs label printed' : w === 'received' ? 'Have it, no label yet' : 'Not here yet (shipping or missing)'
+        : w === 'labeled' ? 'Labeled' : w === 'print' ? 'Needs label' : w === 'received' ? 'Have it, no label yet' : 'Not here yet (shipping or missing)'
       ;(g[k] ??= []).push(p)
     })
     const rank = (k: string) =>

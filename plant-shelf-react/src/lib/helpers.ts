@@ -4,7 +4,7 @@ export const STAGES = ['TC', 'Plug', 'Starter', 'Established', 'Large', 'Tree', 
 export const WHERE: [string, string][] = [
   ['ship', 'Shipping'],
   ['received', 'Received'],
-  ['print', 'Needs label printed'],
+  ['print', 'Needs label'],
   ['labeled', 'Labeled'],
   ['missing', "Can't find it"],
 ]
