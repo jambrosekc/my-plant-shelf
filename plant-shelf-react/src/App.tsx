@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import Particles, { BG_LABEL, BG_ORDER, type BgMode } from './components/Particles'
 import AuthScreen from './components/AuthScreen'
 import NewPassword from './components/NewPassword'
 import Hero from './components/Hero'
@@ -21,11 +22,10 @@ type View = 'shelf' | 'cards' | 'list' | 'sheet'
 const store = (k: string, d: string) => { try { return localStorage.getItem(k) || d } catch { return d } }
 const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* ignore */ } }
 
-export default function App() {
+function Inner({ bg, setBg, theme, setTheme }: { bg: BgMode; setBg: (b: BgMode) => void; theme: string; setTheme: (t: string) => void }) {
   const { user, loading, recovery, clearRecovery } = useAuth()
   const { plants, photos, loading: plantsLoading, error, patch, addPlants, remove, removeMany, patchMany, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
   const [modalId, setModalId] = useState<string | null>(null)
-  const [theme, setTheme] = useState(() => store('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
   const [view, setView] = useState<View>(() => store('view', 'shelf') as View)
   const [gmode, setGmode] = useState<'genus' | 'every'>('genus')
   const [gsel, setGsel] = useState<string | null>(null)
@@ -38,11 +38,6 @@ export default function App() {
   const [tab, setTab] = useState<'home' | 'add' | 'imp' | 'share'>('home')
   const { prof, save: saveProf, error: profError } = useProfile(user?.id)
   const [toast, setToast] = useState('')
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    save('theme', theme)
-  }, [theme])
 
   const list = useMemo(() => plants.filter((p) => passes(p, q, filter)), [plants, q, filter])
 
@@ -106,6 +101,7 @@ export default function App() {
           <button onClick={() => go('add')}>Add a plant</button>
           <button onClick={() => go('imp')}>Import from Excel</button>
           <button onClick={() => go('share')}>Share my shelf</button>
+          <button onClick={() => setBg(BG_ORDER[(BG_ORDER.indexOf(bg) + 1) % BG_ORDER.length])}>Background: {BG_LABEL[bg]}</button>
           <button onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
       )}
@@ -185,6 +181,23 @@ export default function App() {
           onMakeCover={makeCover}
         />
       )}
+    </>
+  )
+}
+
+export default function App() {
+  const [theme, setTheme] = useState(() => store('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const [bg, setBgState] = useState<BgMode>(() => (store('bg', reduced ? 'off' : 'both') as BgMode))
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    save('theme', theme)
+  }, [theme])
+  const setBg = (b: BgMode) => { setBgState(b); save('bg', b) }
+  return (
+    <>
+      <Particles mode={bg} theme={theme} />
+      <Inner bg={bg} setBg={setBg} theme={theme} setTheme={setTheme} />
     </>
   )
 }
