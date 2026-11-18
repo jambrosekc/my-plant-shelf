@@ -46,3 +46,5 @@ html body{background-image:radial-gradient(60vmax 60vmax at 8% 0%,rgba(130,175,1
 .bnav button.on{color:var(--sage-d);font-weight:700}
 #root{padding-bottom:70px}
 .hsearch input[type=search]{background:transparent;border:0;border-radius:0;padding:7px 0;color:var(--hdrink);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.followbtn{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:0;background:var(--sage);color:var(--on);padding:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.followbtn.on{background:transparent;color:var(--sage-d);border:1.5px solid var(--sage)}

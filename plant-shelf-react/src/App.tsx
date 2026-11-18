@@ -78,7 +78,7 @@ export default function App() {
       sub = list.filter((p) => gkey(p) === gsel)
       head = (
         <>
-          <button className="link back" onClick={() => setGsel(null)}>← All genera</button>
+          <button className="link back" onClick={() => setGsel(null)}>← All genus</button>
           <h2 className="gtitle">{gsel}</h2>
           <p className="mut" style={{ margin: '0 0 6px' }}>{sub.length} plant{sub.length === 1 ? '' : 's'}</p>
         </>

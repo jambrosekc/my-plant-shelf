@@ -23,7 +23,7 @@ export default function Hero({ shelf, plants, onPick }: { shelf: string; plants:
       <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: LIGHTS }} />
       <h1 className="title">{shelf}</h1>
       <p className="greet">
-        {greet}. {plants.length} plants, {genera} genera, {status}
+        {greet}. {plants.length} plants, {genera} genus, {status}
       </p>
       {pick && (
         <button className="pick" onClick={() => onPick(pick!.id)}>

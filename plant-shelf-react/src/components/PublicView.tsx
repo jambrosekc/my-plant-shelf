@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { Plant, PlantPhoto } from '../lib/types'
 import { LIGHTS } from '../lib/art'
 import { gkey, genusGroups, sortList } from '../lib/helpers'
-import { Heart } from 'lucide-react'
+import { Check, Heart, Plus } from 'lucide-react'
 import { supabase, photoUrl } from '../lib/supabase'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf, type FavApi } from './PlantViews'
 
@@ -104,13 +104,11 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
   const mine = !!mineSlug && mineSlug === slug
   const home = location.pathname
 
-  const banner = (
-    <div className={'pubbar ' + (mine ? 'mine' : '')}>
-      {mine
-        ? <><span><b>This is your public page.</b> This is exactly what visitors see.</span><a href={home}>Back to my shelf</a></>
-        : <><span><b>Public view</b> · you are looking at a shared shelf. It is read-only.</span><a href={home}>Make your own</a></>}
-    </div>
-  )
+  const banner = mine
+    ? <div className="pubbar mine"><span><b>This is your public page.</b> This is what visitors see.</span><a href={home}>Back to my shelf</a></div>
+    : !userId
+    ? <div className="pubbar"><span>Like what you see?</span><a href={home}>Make your own shelf</a></div>
+    : null
   const top = (
     <div className="hdr"><div />
       <div className="hbtns">
@@ -139,7 +137,7 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
     let head = null
     if (!searching && gsel != null) {
       sub = list.filter((p) => gkey(p) === gsel)
-      head = (<><button className="link back" onClick={() => setGsel(null)}>← All genera</button><h2 className="gtitle">{gsel}</h2></>)
+      head = (<><button className="link back" onClick={() => setGsel(null)}>← All genus</button><h2 className="gtitle">{gsel}</h2></>)
     }
     sub = sortList(sub, 'name')
     body = <>{head}{!sub.length ? <p className="mut">Nothing matches.</p> : view === 'cards'
@@ -154,9 +152,15 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
       <div className="wrap">
         <div className="hero" style={{ padding: 0 }}>
           <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: LIGHTS }} />
-          <h1 className="title">{pub.shelf_name}</h1>
-          <p className="greet">{plants.length} plants, {genusGroups(plants).length} genera. Tap any plant to see more.</p>
-          {userId && !mine && pub.owner_id && <button className={'btn ' + (following ? 'alt' : '')} onClick={toggleFollow} style={{ marginTop: 8 }}>{following ? 'Following' : 'Follow'}</button>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h1 className="title" style={{ margin: 0, minWidth: 0 }}>{pub.shelf_name}</h1>
+            {userId && !mine && pub.owner_id && (
+              <button className={'followbtn' + (following ? ' on' : '')} onClick={toggleFollow} aria-label={following ? 'Unfollow' : 'Follow'} title={following ? 'Following' : 'Follow'}>
+                {following ? <Check size={18} /> : <Plus size={20} />}
+              </button>
+            )}
+          </div>
+          <p className="greet">{plants.length} plants, {genusGroups(plants).length} genus. Tap any plant to see more.</p>
         </div>
         <div className="seg">
           {(['shelf', 'cards'] as const).map((v) => <button key={v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>{v[0].toUpperCase() + v.slice(1)}</button>)}
