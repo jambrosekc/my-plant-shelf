@@ -27,7 +27,7 @@ function Row({ p, nums, onOpen, onPatch, select, picked, toggle }: { p: Plant; n
   )
 }
 
-const WN: Record<string, string> = { missing: "Can't find", ship: 'Shipping', received: 'Received', print: 'Needs label', labeled: 'Labeled' }
+const WN: Record<string, string> = { missing: "Can't find", ship: 'Shipping', received: 'Have it', print: 'Needs label', labeled: 'Labeled' }
 const WO = ['missing', 'ship', 'received', 'print', 'labeled']
 const LO = ['Needs label', 'Have it, no label yet', 'Labeled', 'Not here yet (shipping or missing)']
 

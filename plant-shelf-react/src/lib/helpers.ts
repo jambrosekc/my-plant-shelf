@@ -3,10 +3,10 @@ import type { Plant } from './types'
 export const STAGES = ['TC', 'Plug', 'Starter', 'Established', 'Large', 'Tree', 'Rehab', 'Corm', 'Cutting']
 export const WHERE: [string, string][] = [
   ['ship', 'Shipping'],
-  ['received', 'Received'],
+  ['received', 'Have it'],
   ['print', 'Needs label'],
   ['labeled', 'Labeled'],
-  ['missing', "Can't find it"],
+  ['missing', "Can't find"],
 ]
 
 export type Where = 'ship' | 'received' | 'print' | 'labeled' | 'missing'

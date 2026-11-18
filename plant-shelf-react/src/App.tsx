@@ -133,7 +133,7 @@ export default function App() {
             {filtersOpen && (
               <div className="card" style={{ margin: '6px 0' }}>
                 <div className="chips">
-                  {([['all', 'All'], ['shipping', 'Shipping'], ['received', 'Received'], ['print', 'Needs label'], ['labeled', 'Labeled'], ['missing', "Can't find"], ['repot', 'To repot'], ['water', 'To water'], ['sale', 'For sale'], ['sold', 'Sold']] as [Filter, string][]).map(([k, l]) => (
+                  {([['all', 'All'], ['shipping', 'Shipping'], ['received', 'Have it'], ['print', 'Needs label'], ['labeled', 'Labeled'], ['missing', "Can't find"], ['repot', 'To repot'], ['water', 'To water'], ['sale', 'For sale'], ['sold', 'Sold']] as [Filter, string][]).map(([k, l]) => (
                     <button key={k} className={'chip' + (filter === k ? ' on' : '')} onClick={() => setFilter(k)}>{l}</button>
                   ))}
                 </div>
