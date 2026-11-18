@@ -13,7 +13,6 @@ const TOGGLES: [keyof Profile, string][] = [
 
 export default function ShareView({ prof, save, error, flash }: { prof: Profile; save: (p: Partial<Profile>) => void; error: string; flash: (m: string) => void }) {
   const [rawSlug, setSlug] = useState(prof.public_slug)
-  const slug = rawSlug
   if (!prof.ready)
     return <div className="card"><h3>Sharing</h3><p className="mut">Sharing needs one more database update. Run Part 3 from the setup files in Supabase, then reload this page.</p></div>
 
