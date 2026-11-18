@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import type { Plant } from '../lib/types'
-import { STAGES, WHERE, sellOf, whereOf, wherePatch } from '../lib/helpers'
+import { HumiditySelect, MediumSelect } from './Selects'
+import { STAGES, humidityLabel, WHERE, sellOf, whereOf, wherePatch } from '../lib/helpers'
 
-type Kind = 'ro' | 't' | 'st' | 'w' | 'b' | 's' | 'n'
+type Kind = 'ro' | 't' | 'st' | 'w' | 'b' | 's' | 'n' | 'med' | 'hum'
 const COLS: [string, string, Kind][] = [
   ['plant_id', 'ID', 'ro'], ['plant_name', 'Name', 't'], ['genus', 'Genus', 't'], ['seller_name', 'Seller', 't'],
   ['purchase_stage', 'Stage', 'st'], ['where', 'Where', 'w'], ['to_repot', 'Repot', 'b'], ['to_water', 'Water', 'b'],
-  ['sell', 'Selling', 's'], ['purchase_price', 'Paid $', 'n'], ['soil_medium', 'Soil', 't'], ['notes', 'Notes', 't'],
+  ['sell', 'Selling', 's'], ['purchase_price', 'Paid $', 'n'], ['soil_medium', 'Medium', 'med'], ['humidity', 'Humidity', 'hum'], ['notes', 'Notes', 't'],
 ]
 const SELL: [string, string][] = [['none', 'Not selling'], ['sale', 'For sale'], ['sold', 'Sold']]
 
@@ -51,7 +52,7 @@ export default function SheetView({ list, onPatch }: { list: Plant[]; onPatch: (
         if (k === 'where') patch = { ...patch, ...wherePatch(v as string) }
         else if (k === 'sell') patch = { ...patch, for_sale: v === 'sale', sold: v === 'sold' }
         else if (k === 'to_repot' || k === 'to_water') patch[k] = v
-        else if (k === 'purchase_price') patch[k] = v === '' || isNaN(Number(v)) ? null : Number(v)
+        else if (k === 'purchase_price' || k === 'humidity') patch[k] = v === '' || isNaN(Number(v)) ? null : Number(v)
         else if (k === 'plant_name') patch[k] = String(v).trim() || p.plant_name
         else patch[k] = String(v).trim() || null
       })
@@ -71,6 +72,7 @@ export default function SheetView({ list, onPatch }: { list: Plant[]; onPatch: (
     if (kind === 'w') return WHERE.find((w) => w[0] === v)?.[1] ?? ''
     if (kind === 's') return SELL.find((w) => w[0] === v)?.[1] ?? ''
     if (kind === 'b') return v ? 'Yes' : ''
+    if (kind === 'hum') return humidityLabel(v)
     return String(v)
   }
 
@@ -111,6 +113,8 @@ export default function SheetView({ list, onPatch }: { list: Plant[]; onPatch: (
                     const opts = cur && !STAGES.includes(cur) ? [...STAGES, cur] : STAGES
                     return <td key={k}><select value={cur} onChange={(e) => set(p.id, k, e.target.value)}><option value="">Stage</option>{opts.map((s) => <option key={s} value={s}>{s}</option>)}</select></td>
                   }
+                  if (kind === 'med') return <td key={k}><MediumSelect value={String(v)} onChange={(x) => set(p.id, k, x)} /></td>
+                  if (kind === 'hum') return <td key={k}><HumiditySelect value={String(v)} onChange={(x) => set(p.id, k, x)} /></td>
                   if (kind === 'w') return <td key={k}><select value={String(v)} onChange={(e) => set(p.id, k, e.target.value)}>{WHERE.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}</select></td>
                   if (kind === 's') return <td key={k}><select value={String(v)} onChange={(e) => set(p.id, k, e.target.value)}>{SELL.map((w) => <option key={w[0]} value={w[0]}>{w[1]}</option>)}</select></td>
                   if (k === 'notes') return <td key={k} className="notescell"><textarea rows={3} value={String(v)} onChange={(e) => set(p.id, k, e.target.value)} /></td>

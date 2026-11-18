@@ -2,8 +2,9 @@ import { useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { Camera, Star, Trash2, X } from 'lucide-react'
 import type { Plant, PlantPhoto } from '../lib/types'
-import { STAGES, WHERE, sellOf, whereOf, wherePatch } from '../lib/helpers'
+import { STAGES, WHERE, humidityLabel, sellOf, whereOf, wherePatch } from '../lib/helpers'
 import { photoUrl } from '../lib/supabase'
+import { HumiditySelect, MediumSelect } from './Selects'
 import PhotoCropper from './PhotoCropper'
 
 interface Props {
@@ -20,7 +21,7 @@ interface Props {
 const FIELDS: [keyof Plant & string, string, 'text' | 'number'][] = [
   ['plant_name', 'Plant name', 'text'], ['genus', 'Genus', 'text'], ['seller_name', 'Seller', 'text'],
   ['sourced_from', 'Where bought', 'text'], ['purchase_price', 'Paid ($)', 'number'],
-  ['soil_medium', 'Soil', 'text'], ['asking_price', 'Asking price ($)', 'number'],
+  ['soil_medium', 'Medium', 'text'], ['humidity', 'Humidity', 'number'], ['asking_price', 'Asking price ($)', 'number'],
 ]
 
 function Gallery({ photos, plantId, onDelete, onCover }: { photos: PlantPhoto[]; plantId: string; onDelete: (p: string, id: string) => void; onCover: (p: string, id: string) => void }) {
@@ -133,7 +134,12 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
                 </select>
               </div>
               {FIELDS.slice(2).map(([k, l, t]) => (
-                <div key={k}><label>{l}</label><input type={t} value={draft[k]} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })} /></div>
+                <div key={k}>
+                  <label>{l}</label>
+                  {k === 'soil_medium' ? <MediumSelect value={draft[k]} onChange={(v) => setDraft({ ...draft, [k]: v })} />
+                    : k === 'humidity' ? <HumiditySelect value={draft[k]} onChange={(v) => setDraft({ ...draft, [k]: v })} />
+                    : <input type={t} value={draft[k]} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })} />}
+                </div>
               ))}
             </div>
             <div className="sec">Notes</div>
@@ -149,7 +155,7 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
           <>
             <dl className="kv">
               {kv('Genus', p.genus)}{kv('Stage', p.purchase_stage)}{kv('Seller', p.seller_name)}{kv('Where bought', p.sourced_from)}
-              {kv('Paid', p.purchase_price == null ? '' : '$' + p.purchase_price)}{kv('Soil', p.soil_medium)}
+              {kv('Paid', p.purchase_price == null ? '' : '$' + p.purchase_price)}{kv('Medium', p.soil_medium)}{kv('Humidity', humidityLabel(p.humidity))}
               {kv('Asking price', p.asking_price == null ? '' : '$' + p.asking_price)}
             </dl>
             <div className="sec">Notes</div>

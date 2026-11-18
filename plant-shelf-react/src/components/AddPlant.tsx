@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Plant } from '../lib/types'
 import { STAGES, WHERE, wherePatch } from '../lib/helpers'
+import { HumiditySelect, MediumSelect } from './Selects'
 import { toNum } from '../lib/importer'
 
 const SELL: [string, string][] = [['none', 'Not selling'], ['sale', 'For sale'], ['sold', 'Sold']]
@@ -28,6 +29,7 @@ export default function AddPlant({ onAdd, done }: { onAdd: (rows: Record<string,
       purchase_date: f.date || null,
       purchase_price: toNum(f.price),
       soil_medium: f.soil?.trim() || null,
+      humidity: toNum(f.humidity),
       last_watered: f.water || null,
       to_repot: repot,
       to_water: water,
@@ -68,7 +70,9 @@ export default function AddPlant({ onAdd, done }: { onAdd: (rows: Record<string,
           </div>
           {txt('seller', 'Seller')}{txt('src', 'Where bought')}
           {txt('date', 'Date bought', 'date')}{txt('price', 'Paid ($)', 'number', { step: '0.01' })}
-          {txt('soil', 'Soil')}{txt('water', 'Last watered', 'date')}
+          <div><label>Medium</label><MediumSelect value={f.soil ?? ''} onChange={(v) => setF({ ...f, soil: v })} /></div>
+          <div><label>Humidity</label><HumiditySelect value={f.humidity ?? ''} onChange={(v) => setF({ ...f, humidity: v })} /></div>
+          {txt('water', 'Last watered', 'date')}
         </div>
         <div className="sec">1. Where is it?</div>
         {radios('where', WHERE)}

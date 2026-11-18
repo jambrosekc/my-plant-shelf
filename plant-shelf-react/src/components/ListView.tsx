@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Plant } from '../lib/types'
+import { HumiditySelect, MediumSelect } from './Selects'
 import { STAGES, WHERE, haveish, labelNums, stageRank, whereOf, wherePatch, type GroupBy } from '../lib/helpers'
 
 const byName = (a: Plant, b: Plant) => ((a.plant_name || '').toLowerCase() < (b.plant_name || '').toLowerCase() ? -1 : 1)
@@ -135,6 +136,8 @@ export default function ListView({
               <option value="">Set stage...</option>
               {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
+            <MediumSelect disabled={!picked.length} value="" blank="Set medium..." onChange={(v) => v && bulkPatch({ soil_medium: v })} />
+            <HumiditySelect disabled={!picked.length} value="" blank="Set humidity..." onChange={(v) => v && bulkPatch({ humidity: Number(v) })} />
             <select disabled={!picked.length} value="" onChange={(e) => e.target.value && bulkPatch({ for_sale: e.target.value === 'sale', sold: e.target.value === 'sold' })}>
               <option value="">Set selling...</option>
               <option value="none">Not selling</option><option value="sale">For sale</option><option value="sold">Sold</option>

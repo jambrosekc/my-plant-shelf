@@ -103,3 +103,16 @@ export function labelNums(plants: Plant[]): Record<string, string> {
 
 export const haveish = (p: Plant) => p.have_it || p.shipping
 export type GroupBy = 'seller' | 'stage' | 'status' | 'label'
+
+export const MEDIA = [
+  'Soilless chunky mix', 'Tree fern based mix', 'Sphagnum moss', 'Perlite / pumice mix', 'LECA (semi-hydro)',
+  'Water (hydro)', 'Aroid potting mix', 'Potting soil', 'Coco coir', 'Orchid bark mix',
+]
+export const HUMIDITY: [string, string][] = [
+  ['40', 'Ambient (about 40%)'], ['55', 'Moderate (about 55%)'], ['70', 'Higher (about 70%)'], ['85', 'High, enclosed (about 85%)'],
+]
+export const humidityLabel = (v: unknown) => {
+  if (v == null || v === '') return ''
+  const hit = HUMIDITY.find((h) => Number(h[0]) === Number(v))
+  return hit ? hit[1] : `${v}%`
+}
