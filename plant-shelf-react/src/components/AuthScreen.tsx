@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Leaf } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { cleanSlug } from '../lib/useProfile'
 
 type Mode = 'in' | 'up' | 'reset'
 
@@ -9,6 +10,8 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [shelf, setShelf] = useState('')
+  const [uname, setUname] = useState('')
+  const [unameMsg, setUnameMsg] = useState('')
   const [msg, setMsg] = useState('')
   const [needResend, setNeedResend] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -22,10 +25,13 @@ export default function AuthScreen() {
       const r = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.origin })
       setMsg(r.error ? r.error.message : 'Check your email for a reset link.')
     } else if (mode === 'up') {
+      if (uname.length < 3) { setMsg('Pick a username with at least 3 letters or numbers.'); setBusy(false); return }
+      const ok = await supabase.rpc('username_available', { p_name: uname })
+      if (ok.data === false) { setMsg('That username is taken. Try another.'); setBusy(false); return }
       const r = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { shelf_name: shelf.trim() || 'My Shelf' } },
+        options: { data: { shelf_name: shelf.trim() || 'My Shelf', username: uname } },
       })
       if (r.error) setMsg(r.error.message)
       else if (!r.data.session) setMsg('Check your email to confirm your account, then sign in.')
@@ -56,6 +62,18 @@ export default function AuthScreen() {
           <>
             <label htmlFor="shelf">Shelf name</label>
             <input id="shelf" value={shelf} onChange={(e) => setShelf(e.target.value)} placeholder="My Shelf" />
+            <label htmlFor="un">Username (this becomes your share link)</label>
+            <input
+              id="un" required minLength={3} maxLength={30} autoCapitalize="off" autoComplete="off" value={uname}
+              onChange={(e) => { setUname(cleanSlug(e.target.value)); setUnameMsg('') }}
+              onBlur={async () => {
+                if (uname.length < 3) return
+                const r = await supabase.rpc('username_available', { p_name: uname })
+                if (!r.error) setUnameMsg(r.data ? 'Available' : 'Taken. Try another.')
+              }}
+              placeholder="e.g. jess-plants"
+            />
+            {unameMsg && <p className="mut" style={{ margin: '4px 0 0' }}>{unameMsg}</p>}
           </>
         )}
         <label htmlFor="em">Email</label>
