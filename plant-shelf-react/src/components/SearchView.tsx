@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, photoUrl } from '../lib/supabase'
 import type { Plant } from '../lib/types'
 
-interface Shelf { owner_id: string; slug: string; shelf_name: string; plant_count: number }
+interface Shelf { owner_id: string; slug: string; shelf_name: string; plant_count: number | null }
 interface PubPlant { uid: string; plant_name: string; genus: string | null; purchase_stage: string | null; for_sale: boolean; sold: boolean; asking_price: number | null; slug: string; shelf_name: string; photo: string | null }
 
 export default function SearchView({ query, mine, onOpenMine }: { query: string; mine: Plant[]; onOpenMine: (id: string) => void }) {
@@ -44,7 +44,7 @@ export default function SearchView({ query, mine, onOpenMine }: { query: string;
         <div className="sec">Shelves</div>
         {shelfHits.map((s) => (
           <a key={s.owner_id} href={`?shelf=${s.slug}`} className="card" style={{ margin: '6px 0', padding: 10, display: 'block', color: 'var(--ink)', textDecoration: 'none' }}>
-            <b>{s.shelf_name}</b> <span className="mut" style={{ fontSize: 13 }}>@{s.slug} · {s.plant_count} plants</span>
+            <b>{s.shelf_name}</b> <span className="mut" style={{ fontSize: 13 }}>@{s.slug}{s.plant_count != null ? ` · ${s.plant_count} plants` : ''}</span>
           </a>
         ))}
       </>}

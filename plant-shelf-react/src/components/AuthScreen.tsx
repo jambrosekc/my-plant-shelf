@@ -74,6 +74,7 @@ export default function AuthScreen() {
               }}
               placeholder="e.g. jessplants"
             />
+            <p className="mut" style={{ margin: '4px 0 0', fontSize: 12 }}>Your shelf name and username are visible to other collectors. Your plants stay private unless you choose to share them.</p>
             {unameMsg && <p className="mut" style={{ margin: '4px 0 0' }}>{unameMsg}</p>}
           </>
         )}

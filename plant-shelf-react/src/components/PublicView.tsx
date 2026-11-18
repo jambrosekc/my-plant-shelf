@@ -6,7 +6,7 @@ import { Check, Heart, Plus } from 'lucide-react'
 import { supabase, photoUrl } from '../lib/supabase'
 import { CardGrid, GenusCards, GenusShelf, IllusShelf, type FavApi } from './PlantViews'
 
-interface Pub { owner_id?: string; shelf_name: string; show_prices: boolean; plants: (Plant & { photos?: string[] })[] }
+interface Pub { owner_id?: string; shared?: boolean; shelf_name: string; show_prices: boolean; plants: (Plant & { photos?: string[] })[] }
 
 function PublicModal({ p, pub, onClose, faved, onHeart }: { p: Plant & { photos?: string[] }; pub: Pub; onClose: () => void; faved?: boolean; onHeart?: () => void }) {
   const rows: [string, unknown][] = [
@@ -124,6 +124,27 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
   if (pub === null)
     return <>{banner}{top}<div className="wrap"><div className="card"><h3>This shelf is private</h3><p className="mut">The owner has not shared it, or the link has changed.</p></div></div></>
 
+  if (pub.shared === false) {
+    return (
+      <>
+        {banner}{top}
+        <div className="wrap">
+          <div className="hero" style={{ padding: 0 }}>
+            <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: LIGHTS }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <h1 className="title" style={{ margin: 0, minWidth: 0 }}>{pub.shelf_name}</h1>
+              {userId && !mine && pub.owner_id && (
+                <button className={'followbtn' + (following ? ' on' : '')} onClick={toggleFollow} aria-label={following ? 'Unfollow' : 'Follow'} title={following ? 'Following' : 'Follow'}>
+                  {following ? <Check size={18} /> : <Plus size={20} />}
+                </button>
+              )}
+            </div>
+            <p className="greet">This collector has not shared their plants yet.{userId && !mine ? ' Follow them to see them when they do.' : ''}</p>
+          </div>
+        </div>
+      </>
+    )
+  }
   const searching = !!q
   const fav: FavApi | undefined = userId ? { has: (p) => favs.has(String((p as { uid?: string }).uid)), toggle: (p) => toggleHeart(String((p as { uid?: string }).uid)) } : undefined
   const open = (id: string) => setModal(id)

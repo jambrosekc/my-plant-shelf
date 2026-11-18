@@ -27,8 +27,16 @@ export default function ShareView({ prof, save, error, flash }: { prof: Profile;
   return (
     <div className="card">
       <h3>Share my shelf</h3>
-      <p className="mut">Your shelf is private. Turn this on to get a link anyone can open without logging in.</p>
-      {check('is_public', 'Make my shelf public')}
+      {prof.v10 ? (
+        <>
+          <div className="sec">Your profile</div>
+          {check('profile_public', 'Let other collectors find and follow me in Discover')}
+          <p className="mut" style={{ marginTop: -4 }}>Only your shelf name, @username and follower count are shown. No plants.</p>
+          <div className="sec">Your plants</div>
+        </>
+      ) : null}
+      <p className="mut">Your plants are private. Turn this on to get a link anyone can open without logging in.</p>
+      {check('is_public', 'Share my plants publicly')}
       {check('show_prices', 'Show what I paid on the public page')}
       {prof.v4 ? (
         <>
@@ -67,7 +75,7 @@ export default function ShareView({ prof, save, error, flash }: { prof: Profile;
           <p className="mut">The public page shows plant names, type, stage, and whether you have it or it is shipping. It also shows for-sale plants with their asking price. Visitors can tap a plant for more. Order numbers are never shown. Seller, soil, conditions, lineage, notes and photos only appear if you switch them on above.</p>
         </>
       ) : (
-        <p className="mut">Nothing is visible to anyone but you right now.</p>
+        <p className="mut">Your plants are visible to no one but you right now.</p>
       )}
     </div>
   )

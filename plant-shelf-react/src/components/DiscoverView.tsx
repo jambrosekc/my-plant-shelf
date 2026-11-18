@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Heart, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-interface Shelf { owner_id: string; slug: string; shelf_name: string; plant_count: number; for_sale: number; followers: number; following: boolean }
+interface Shelf { owner_id: string; slug: string; shelf_name: string; shared?: boolean; plant_count: number | null; for_sale: number; followers: number; following: boolean }
 
 export default function DiscoverView({ userId, mineSlug }: { userId: string; mineSlug: string }) {
   const [shelves, setShelves] = useState<Shelf[] | null>(null)
@@ -52,7 +52,7 @@ export default function DiscoverView({ userId, mineSlug }: { userId: string; min
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                 <a href={`?shelf=${s.slug}`} style={{ color: 'var(--ink)', textDecoration: 'none', minWidth: 0 }}>
                   <b style={{ fontFamily: 'var(--display)', fontSize: 21 }}>{s.shelf_name}</b>
-                  <div className="mut" style={{ fontSize: 13 }}>@{s.slug} · {s.plant_count} plant{s.plant_count === 1 ? '' : 's'}{s.for_sale ? ` · ${s.for_sale} for sale` : ''} · {s.followers} follower{s.followers === 1 ? '' : 's'}</div>
+                  <div className="mut" style={{ fontSize: 13 }}>@{s.slug} · {s.shared === false || s.plant_count == null ? 'plants not shared' : `${s.plant_count} plant${s.plant_count === 1 ? '' : 's'}`}{s.for_sale ? ` · ${s.for_sale} for sale` : ''} · {s.followers} follower{s.followers === 1 ? '' : 's'}</div>
                 </a>
                 {s.slug !== mineSlug && (
                   <button className={'btn ' + (s.following ? 'alt' : '')} onClick={() => toggle(s)} style={{ flex: '0 0 auto' }}>
