@@ -102,8 +102,8 @@ export default function ListView({
   return (
     <>
       <div className="card">
-        <div className="stats"><Stat n={all.length} l="Plants" /><Stat n={have} l="Have it" /><Stat n={c.ship} l="Shipping" /><Stat n={c.missing} l="Can't find" /></div>
-        <p className="mut" style={{ margin: '6px 0 10px', textAlign: 'center', fontSize: 12 }}>Have it + Shipping + Can't find = Plants</p>
+        <div className="stats"><Stat n={all.length} l="Plants" /><Stat n={c.ship} l="Shipping" /><Stat n={have} l="Have it" /><Stat n={c.missing} l="Can't find" /></div>
+        <p className="mut" style={{ margin: '6px 0 10px', textAlign: 'center', fontSize: 12 }}>Shipping + Have it + Can't find = Plants</p>
         <div className="stats" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}><Stat n={c.labeled} l="Labeled" /><Stat n={c.print} l="Needs label" /><Stat n={c.received} l="No label yet" /></div>
         <p className="mut" style={{ margin: '6px 0 0', textAlign: 'center', fontSize: 12 }}>Of the ones you have</p>
       </div>
