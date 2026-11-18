@@ -5,16 +5,14 @@ import PlantArt from './PlantArt'
 import SellBadge from './SellBadge'
 
 type Photos = Record<string, PlantPhoto[]>
-// One dot per plant in the genus: green = for sale, empty = not for sale. Big genera show a bar instead.
+// One green dot when anything in the genus is for sale, plus "for sale / total".
 function SaleDots({ items }: { items: Plant[] }) {
   const n = items.filter((p) => p.for_sale && !p.sold).length
   if (!n) return null
   const total = items.length
   return (
     <span className="gdots" title={`${n} of ${total} for sale`}>
-      {total <= 14
-        ? Array.from({ length: total }, (_, i) => <i key={i} className={i < n ? 'on' : ''} />)
-        : <b className="gbar"><u style={{ width: `${(n / total) * 100}%` }} /></b>}
+      <i className="on" />
       <em>{n}/{total}</em>
     </span>
   )
