@@ -3,7 +3,7 @@ import { Printer } from 'lucide-react'
 import type { Plant } from '../lib/types'
 import { PCOLS, downloadPrintSheet, needsLabel, pickedCols, savePicked } from '../lib/print'
 
-export default function PrintPanel({ plants, onMarkLabeled, flash }: { plants: Plant[]; onMarkLabeled: (ids: string[]) => Promise<string>; flash: (m: string) => void }) {
+export default function PrintPanel({ plants, onMarkLabeled, flash, slug }: { plants: Plant[]; slug?: string; onMarkLabeled: (ids: string[]) => Promise<string>; flash: (m: string) => void }) {
   const [open, setOpen] = useState(false)
   const [cols, setCols] = useState<string[]>(pickedCols)
   const [mark, setMark] = useState(false)
@@ -19,7 +19,7 @@ export default function PrintPanel({ plants, onMarkLabeled, flash }: { plants: P
   async function go() {
     if (!cols.length) return flash('Pick at least one column')
     setBusy(true)
-    const n = await downloadPrintSheet(plants, cols)
+    const n = await downloadPrintSheet(plants, cols, slug)
     if (mark) {
       const e = await onMarkLabeled(list.map((p) => p.id))
       flash(e ? 'Downloaded, but could not mark them labeled: ' + e : `Downloaded and marked ${n} labeled`)

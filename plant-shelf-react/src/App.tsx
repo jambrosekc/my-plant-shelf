@@ -177,7 +177,7 @@ export default function App() {
                 ))}
               </div>
             )}
-            <PrintPanel plants={plants} flash={flash} onMarkLabeled={(ids) => patchMany(ids, { labeled: true, to_print: false })} />
+            <PrintPanel plants={plants} slug={prof.public_slug || undefined} flash={flash} onMarkLabeled={(ids) => patchMany(ids, { labeled: true, to_print: false })} />
             {(view === 'shelf' || view === 'cards') && <div className="ctl">
               <div className="seg2">
                 <button className={gmode === 'genus' ? 'on' : ''} onClick={() => { setGmode('genus'); setGsel(null) }}>By genus</button>
