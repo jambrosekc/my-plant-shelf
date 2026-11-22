@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react'
 import type { Plant, PlantPhoto } from '../lib/types'
-import { genusGroups, repPlant, labelNums } from '../lib/helpers'
+import { genusGroups, repPlant, labelNums, sections, type SortBy } from '../lib/helpers'
 import { PlaceLabel } from './Selects'
 import PlantArt from './PlantArt'
 import SellBadge from './SellBadge'
@@ -76,16 +76,14 @@ export function GenusCards({ list, photos, onOpen }: { list: Plant[]; photos: Ph
   )
 }
 
-export function IllusShelf({ list, photos, onOpen, fav }: { list: Plant[]; photos: Photos; onOpen: (id: string) => void; fav?: FavApi }) {
-  const g: Record<string, Plant[]> = {}
-  list.forEach((p) => (g[p.genus || 'Other'] ??= []).push(p))
+export function IllusShelf({ list, photos, onOpen, fav, sortBy = 'name' }: { list: Plant[]; photos: Photos; onOpen: (id: string) => void; fav?: FavApi; sortBy?: SortBy }) {
   return (
     <>
-      {Object.keys(g).sort().map((k) => (
+      {sections(list, sortBy).map(({ k, items }) => (
         <div className="ishelf" key={k}>
-          <h3>{k} <span className="mut">({g[k].length})</span></h3>
+          <h3>{k} <span className="mut">({items.length})</span></h3>
           <div className="irow">
-            {g[k].map((p) => (
+            {items.map((p) => (
               <div key={p.id} className={'icell' + (p.have_it || p.shipping ? '' : ' off')} onClick={() => onOpen(p.id)}>
                 <SellBadge p={p} corner />
                 <HeartBtn p={p} fav={fav} />
@@ -102,9 +100,21 @@ export function IllusShelf({ list, photos, onOpen, fav }: { list: Plant[]; photo
 }
 
 export function CardGrid({
-  list, all, photos, onOpen, onWhere, readOnly, fav,
-}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean; fav?: FavApi }) {
+  list, all, photos, onOpen, onWhere, readOnly, fav, sortBy,
+}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean; fav?: FavApi; sortBy?: SortBy }) {
   const nums = labelNums(all)
+  if (sortBy) {
+    return (
+      <>
+        {sections(list, sortBy).map(({ k, items }) => (
+          <div key={k}>
+            <h3 className="cgh">{k} <span className="mut">({items.length})</span></h3>
+            <CardGrid list={items} all={all} photos={photos} onOpen={onOpen} onWhere={onWhere} readOnly={readOnly} fav={fav} />
+          </div>
+        ))}
+      </>
+    )
+  }
   return (
     <div className="cardgrid">
       {list.map((p) => (

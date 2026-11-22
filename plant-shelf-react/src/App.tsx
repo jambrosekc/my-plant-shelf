@@ -90,8 +90,8 @@ export default function App() {
       <>
         {head}
         {!sub.length ? <p className="mut">Nothing matches.</p> : view === 'cards'
-          ? <CardGrid list={sub} all={plants} photos={photos} onOpen={open} onWhere={patch} />
-          : <IllusShelf list={sub} photos={photos} onOpen={open} />}
+          ? <CardGrid list={sub} all={plants} photos={photos} onOpen={open} onWhere={patch} sortBy={sortBy} />
+          : <IllusShelf list={sub} photos={photos} onOpen={open} sortBy={sortBy} />}
       </>
     )
   }
@@ -184,8 +184,8 @@ export default function App() {
                 <button className={gmode === 'every' ? 'on' : ''} onClick={() => { setGmode('every'); setGsel(null) }}>Every plant</button>
               </div>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)}>
-                <option value="name">Sort: name</option><option value="seller">Sort: seller</option>
-                <option value="stage">Sort: stage</option><option value="newest">Sort: newest</option>
+                <option value="name">Sort: name (by genus)</option><option value="seller">Sort: seller</option>
+                <option value="stage">Sort: stage</option><option value="newest">Sort: newest (by month)</option>
               </select>
             </div>}
             {body()}

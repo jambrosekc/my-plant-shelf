@@ -91,3 +91,4 @@ table{border-collapse:collapse;width:100%;font-size:13px}
 td,th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 details summary{cursor:pointer;color:var(--sage-d);margin-top:12px}
+.cgh{font-size:15px;color:var(--sage-d);margin:18px 0 6px}

@@ -37,19 +37,53 @@ export const stageRank = (s: string | null) => {
 
 export type SortBy = 'name' | 'seller' | 'stage' | 'newest'
 
+// Purchase dates are text like 10/07/26, 10/07/2026 or 2026-10-07. Turns one into a sortable number (0 = no date).
+export function dateNum(p: Plant): number {
+  const s = String((p as unknown as Record<string, unknown>)['purchase_date'] ?? '').trim()
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (m) return +m[1] * 10000 + +m[2] * 100 + +m[3]
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/)
+  if (m) return (+m[3] < 100 ? 2000 + +m[3] : +m[3]) * 10000 + +m[1] * 100 + +m[2]
+  return 0
+}
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// Headings for the shelf and card views: they follow whatever the Sort menu says.
+// Items inside a section keep the order they were given (already sorted by sortList).
+export function sections(list: Plant[], sortBy: SortBy): { k: string; items: Plant[] }[] {
+  const keyOf = (p: Plant): string => {
+    if (sortBy === 'seller') return p.seller_name || 'Seller not set'
+    if (sortBy === 'stage') return p.purchase_stage || 'Stage not set'
+    if (sortBy === 'newest') {
+      const d = dateNum(p)
+      return d ? `${MONTHS[Math.floor((d % 10000) / 100) - 1] ?? ''} ${Math.floor(d / 10000)}` : 'No date'
+    }
+    return p.genus || 'Other'
+  }
+  const m: Record<string, Plant[]> = {}
+  const order: string[] = []
+  list.forEach((p) => { const k = keyOf(p); if (!m[k]) { m[k] = []; order.push(k) } m[k].push(p) })
+  const unset = ['Other', 'Seller not set', 'Stage not set', 'No date']
+  if (sortBy === 'newest') return order.map((k) => ({ k, items: m[k] })) // already newest first
+  const rank = (k: string) => (sortBy === 'stage' ? stageRank(k === 'Stage not set' ? null : k) : 0)
+  return order
+    .sort((a, b) => (unset.includes(a) ? 1 : 0) - (unset.includes(b) ? 1 : 0) || rank(a) - rank(b) || a.toLowerCase().localeCompare(b.toLowerCase()))
+    .map((k) => ({ k, items: m[k] }))
+}
+
 export function sortList(list: Plant[], sortBy: SortBy): Plant[] {
   const key: Record<SortBy, (p: Plant) => string | number> = {
     name: (p) => (p.plant_name || '').toLowerCase(),
     seller: (p) => (p.seller_name || 'zzz').toLowerCase(),
     stage: (p) => stageRank(p.purchase_stage),
-    newest: (p) => String(p['purchase_date'] ?? ''),
+    newest: (p) => dateNum(p),
   }
   const f = key[sortBy]
   return [...list].sort((a, b) => {
     const x = f(a)
     const y = f(b)
     let r = x < y ? -1 : x > y ? 1 : 0
-    if (sortBy === 'newest') r = -r
+    if (sortBy === 'newest') r = (x === 0 ? 1 : 0) - (y === 0 ? 1 : 0) || -r
     return r || ((a.plant_name || '').toLowerCase() < (b.plant_name || '').toLowerCase() ? -1 : 1)
   })
 }
