@@ -71,7 +71,7 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
   useEffect(() => {
     const want = new URLSearchParams(location.search).get('plant')
     if (!want || !pub) return
-    const i = pub.plants.findIndex((p) => p.uid === want)
+    const i = pub.plants.findIndex((p) => p.uid === want || (p as { plant_id?: string }).plant_id?.toLowerCase() === want.toLowerCase())
     if (i >= 0) setModal('pub' + i)
   }, [pub])
 

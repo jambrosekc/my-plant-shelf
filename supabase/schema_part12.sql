@@ -51,6 +51,7 @@ begin
       'cultivar', p.cultivar,
       'variant', p.variant,
       'purchase_stage', p.purchase_stage,
+      'plant_id', p.plant_id,
       'have_it', p.have_it,
       'shipping', p.shipping,
       'for_sale', p.for_sale,
