@@ -58,8 +58,8 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
     setEdit(true)
   }
 
-  function saveEdit() {
-    if (!draft.plant_name.trim()) return setMsg('Plant name cannot be empty')
+  function saveEdit(): boolean {
+    if (!draft.plant_name.trim()) { setMsg('Plant name cannot be empty'); return false }
     const patch: Record<string, unknown> = {}
     FIELDS.forEach(([k, , t]) => {
       const v = draft[k].trim()
@@ -70,6 +70,13 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
     onPatch(p.id, patch as Partial<Plant>)
     setEdit(false)
     setMsg('')
+    return true
+  }
+
+  // While editing, closing saves what you typed so nothing is lost; otherwise there is nothing pending.
+  function closeSheet() {
+    if (edit && !saveEdit()) return
+    onClose()
   }
 
   async function cropped(blob: Blob) {
@@ -90,11 +97,11 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
   const stages = p.purchase_stage && !STAGES.includes(p.purchase_stage) ? [...STAGES, p.purchase_stage] : STAGES
 
   return (
-    <div className="modal" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal" onClick={(e) => e.target === e.currentTarget && !edit && onClose()}>
       <div className="msheet">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <h3>{p.plant_name}</h3>
-          <button className="link" style={{ color: 'var(--sage-d)' }} onClick={onClose}><X size={16} /> Done</button>
+          <button className="link" style={{ color: 'var(--sage-d)' }} onClick={closeSheet}><X size={16} /> {edit ? 'Save & close' : 'Done'}</button>
         </div>
         <div className="mut">{p.plant_id}</div>
 
