@@ -31,6 +31,7 @@ export default function App() {
   const { user, loading, recovery, clearRecovery } = useAuth()
   const { plants, photos, loading: plantsLoading, error, patch, addPlants, remove, removeMany, patchMany, addPhoto, deletePhoto, makeCover } = usePlants(user?.id)
   const [modalId, setModalId] = useState<string | null>(null)
+  const [autoEdit, setAutoEdit] = useState(false)
   const [theme, setTheme] = useState(() => store('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
   const [view, setView] = useState<View>(() => store('view', 'shelf') as View)
   const [gmode, setGmode] = useState<'genus' | 'every'>('genus')
@@ -65,6 +66,20 @@ export default function App() {
   const go = (t: 'home' | 'add' | 'imp' | 'share' | 'discover' | 'favs' | 'feed' | 'search') => { setTab(t); setMenuOpen(false); window.scrollTo(0, 0) }
   const open = (id: string) => setModalId(id)
   const modalPlant = plants.find((p) => p.id === modalId)
+
+  // Copy a plant as a new one: keeps the name, seller, date, price, stage, notes and so on; gets a fresh Plant ID and no photos.
+  async function duplicate(id: string) {
+    const src = plants.find((p) => p.id === id)
+    if (!src) return
+    const row: Record<string, unknown> = { ...src }
+    ;['id', 'user_id', 'plant_id', 'created_at', 'updated_at'].forEach((k) => delete row[k])
+    Object.assign(row, { have_it: true, shipping: false, refunded: false, labeled: false, to_print: true, for_sale: false, sold: false, asking_price: null })
+    const r = await addPlants([row])
+    if (r.error || !r.ids?.[0]) return flash('Could not duplicate: ' + (r.error || 'unknown error'))
+    setAutoEdit(true)
+    setModalId(r.ids[0])
+    flash('Duplicated. Change anything that differs, then Save & close.')
+  }
 
   function body() {
     if (view === 'list') return <ListView all={plants} list={list} groupBy={groupBy} setGroupBy={setGroupBy} onOpen={open} onPatch={patch} onBulkDelete={removeMany} onBulkPatch={patchMany} />
@@ -202,7 +217,10 @@ export default function App() {
         <PlantModal
           plant={modalPlant}
           photos={photos[modalPlant.id] ?? []}
-          onClose={() => setModalId(null)}
+          key={modalPlant.id}
+          autoEdit={autoEdit}
+          onDuplicate={duplicate}
+          onClose={() => { setModalId(null); setAutoEdit(false) }}
           onPatch={patch}
           onDelete={remove}
           onAddPhoto={(id, blob) => addPhoto(id, user.id, blob)}

@@ -46,13 +46,15 @@ export function usePlants(userId: string | undefined) {
       return o
     })
     let done = 0
+    const ids: string[] = []
     for (let i = 0; i < clean.length; i += 200) {
       const r = await supabase.from('plants').insert(clean.slice(i, i + 200)).select()
-      if (r.error) return { error: r.error.message, done }
+      if (r.error) return { error: r.error.message, done, ids }
       done += r.data?.length ?? 0
+      ;(r.data ?? []).forEach((x) => ids.push(String((x as { id: string }).id)))
     }
     await load()
-    return { error: '', done }
+    return { error: '', done, ids }
   }
 
   async function remove(id: string) {

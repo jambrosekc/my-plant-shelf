@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { Camera, Star, Trash2, X } from 'lucide-react'
 import type { Plant, PlantPhoto } from '../lib/types'
@@ -11,6 +11,8 @@ interface Props {
   plant: Plant
   photos: PlantPhoto[]
   onClose: () => void
+  autoEdit?: boolean
+  onDuplicate?: (id: string) => void
   onPatch: (id: string, c: Partial<Plant>) => void
   onDelete: (id: string) => void
   onAddPhoto: (plantId: string, blob: Blob) => Promise<string>
@@ -45,7 +47,7 @@ function Gallery({ photos, plantId, onDelete, onCover }: { photos: PlantPhoto[];
   )
 }
 
-export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelete, onAddPhoto, onDeletePhoto, onMakeCover }: Props) {
+export default function PlantModal({ plant: p, photos, autoEdit, onDuplicate, onClose, onPatch, onDelete, onAddPhoto, onDeletePhoto, onMakeCover }: Props) {
   const [edit, setEdit] = useState(false)
   const [draft, setDraft] = useState<Record<string, string>>({})
   const [queue, setQueue] = useState<File[]>([])
@@ -57,6 +59,8 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
     setDraft(d)
     setEdit(true)
   }
+
+  useEffect(() => { if (autoEdit) startEdit() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function saveEdit(): boolean {
     if (!draft.plant_name.trim()) { setMsg('Plant name cannot be empty'); return false }
@@ -175,6 +179,7 @@ export default function PlantModal({ plant: p, photos, onClose, onPatch, onDelet
             {p.notes ? <div className="notes-read">{p.notes}</div> : <p className="mut">No notes yet.</p>}
             <div className="row" style={{ marginTop: 14 }}>
               <button className="btn" onClick={startEdit}>Edit details</button>
+              {onDuplicate && <button className="btn alt" onClick={() => onDuplicate(p.id)}>Duplicate</button>}
               <button className="btn bad" onClick={() => confirm('Delete this plant?') && (onDelete(p.id), onClose())}>Delete</button>
             </div>
           </>
