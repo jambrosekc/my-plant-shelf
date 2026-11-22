@@ -42,7 +42,7 @@ textarea{min-height:64px}
 .sec{margin:14px 0 4px;font-size:13px;font-weight:700;color:var(--sage-d)}
 .rad{display:flex;gap:6px;align-items:center;margin:0;font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--card)}
 .wsel{border:1px solid var(--line);border-radius:9px;padding:7px 6px;font-size:12px;background:var(--card);max-width:128px}
-.wsel.w-ship{background:#d9a441;color:#fff;border-color:#d9a441}.wsel.w-labeled{background:var(--sage);color:var(--on);border-color:var(--sage)}.wsel.w-print{background:var(--sage-l);border-color:var(--sage)}.wsel.w-missing{background:#f6dcdc;color:#5a2a22}
+.wsel.w-ship{background:#d9a441;color:#fff;border-color:#d9a441}.wsel.w-labeled{background:var(--sage);color:var(--on);border-color:var(--sage)}.wsel.w-print{background:var(--sage-l);border-color:var(--sage)}.wsel.w-missing{background:#f6dcdc;color:#5a2a22}.wsel.w-refunded{background:#e7e2f0;color:#3d3358;border-color:#b8aed3}
 .tg{border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:9px;padding:7px 9px;font-size:12px;min-width:54px}
 .tg.on{background:var(--sage);border-color:var(--sage);color:var(--on);font-weight:600}
 .tg.ship.on{background:#d9a441;border-color:#d9a441;color:#fff}

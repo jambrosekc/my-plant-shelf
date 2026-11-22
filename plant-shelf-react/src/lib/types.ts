@@ -15,6 +15,7 @@ export interface Plant {
   have_it: boolean
   labeled: boolean
   shipping: boolean
+  refunded: boolean
   to_print: boolean
   to_repot: boolean
   to_water: boolean

@@ -8,13 +8,13 @@ export const COLS: [string, string, Kind][] = [
   ['Soil Likes', 'soil_likes', 'text'], ['pH Level', 'ph', 'text'], ['Light Level', 'light', 'text'], ['Watering Needs', 'watering_needs', 'text'],
   ['Current Soil Medium', 'soil_medium', 'text'], ['Current Temp (F)', 'temp', 'num'], ['Current Humidity (%)', 'humidity', 'num'],
   ['Last Watered', 'last_watered', 'date'], ['Water Every (days)', 'water_every_days', 'num'],
-  ['Have It', 'have_it', 'bool'], ['Have It Labeled', 'labeled', 'bool'], ['Shipping', 'shipping', 'bool'],
+  ['Have It', 'have_it', 'bool'], ['Have It Labeled', 'labeled', 'bool'], ['Shipping', 'shipping', 'bool'], ['Refunded', 'refunded', 'bool'],
   ['To Print', 'to_print', 'bool'], ['To Repot', 'to_repot', 'bool'], ['To Water', 'to_water', 'bool'], ['Notes', 'notes', 'text'],
   ['For Sale', 'for_sale', 'bool'], ['Asking Price ($)', 'asking_price', 'num'], ['Sold', 'sold', 'bool'], ['Sold Date', 'sold_date', 'date'],
   ['Sold Price ($)', 'sold_price', 'num'], ['Sold To / Platform', 'sold_to', 'text'], ['Sale Notes', 'sale_notes', 'text'],
 ]
 const ALIAS: Record<string, string> = { 'Current Temp (°F)': 'Current Temp (F)', 'Inventory Note': 'Notes' }
-export const BOOLS = ['have_it', 'labeled', 'shipping', 'to_print', 'to_repot', 'to_water', 'for_sale', 'sold']
+export const BOOLS = ['have_it', 'labeled', 'shipping', 'refunded', 'to_print', 'to_repot', 'to_water', 'for_sale', 'sold']
 
 const pad = (n: number) => (n < 10 ? '0' : '') + n
 export const toBool = (v: unknown) => /^(y|yes|true|1|x)$/i.test(String(v ?? '').trim())

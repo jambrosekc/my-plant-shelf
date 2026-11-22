@@ -163,7 +163,7 @@ export default function App() {
             {filtersOpen && (
               <div className="card" style={{ margin: '6px 0' }}>
                 {([
-                  ['Where', [['all', 'All'], ['shipping', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"]]],
+                  ['Where', [['all', 'All'], ['shipping', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"], ['refunded', 'Refunded']]],
                   ['Label', [['print', 'Needs label'], ['labeled', 'Labeled']]],
                   ['Care', [['repot', 'To repot'], ['water', 'To water']]],
                   ['Selling', [['sale', 'For sale'], ['sold', 'Sold']]],

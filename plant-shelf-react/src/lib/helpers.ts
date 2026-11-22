@@ -6,11 +6,13 @@ export const WHERE: [string, string][] = [
   ['print', 'Needs label'],
   ['labeled', 'Labeled'],
   ['missing', "Can't find"],
+  ['refunded', 'Refunded'],
 ]
 
-export type Where = 'ship' | 'print' | 'labeled' | 'missing'
+export type Where = 'ship' | 'print' | 'labeled' | 'missing' | 'refunded'
 
 export function whereOf(p: Plant): Where {
+  if (p.refunded) return 'refunded'
   if (p.shipping) return 'ship'
   if (!p.have_it) return 'missing'
   return p.labeled ? 'labeled' : 'print' // a plant you have that has no label yet needs one
@@ -18,6 +20,7 @@ export function whereOf(p: Plant): Where {
 
 export function wherePatch(w: string): Partial<Plant> {
   return {
+    refunded: w === 'refunded',
     shipping: w === 'ship',
     have_it: w === 'print' || w === 'labeled',
     labeled: w === 'labeled',
@@ -61,7 +64,7 @@ export function genusGroups(list: Plant[]) {
 
 export const repPlant = (items: Plant[]) => items.find((p) => p.have_it) ?? items[0]
 
-export type Filter = 'all' | 'have' | 'labeled' | 'missing' | 'shipping' | 'print' | 'repot' | 'water' | 'sale' | 'sold'
+export type Filter = 'all' | 'have' | 'labeled' | 'missing' | 'shipping' | 'print' | 'repot' | 'water' | 'sale' | 'sold' | 'refunded'
 
 export function passes(p: Plant, q: string, filter: Filter): boolean {
   if (q) {
@@ -72,7 +75,8 @@ export function passes(p: Plant, q: string, filter: Filter): boolean {
     case 'have': return placeOf(p) === 'have'
     case 'labeled': return whereOf(p) === 'labeled'
     case 'missing': return whereOf(p) === 'missing'
-    case 'shipping': return p.shipping
+    case 'shipping': return p.shipping && !p.refunded
+    case 'refunded': return !!p.refunded
     case 'print': return whereOf(p) === 'print'
     case 'repot': return p.to_repot
     case 'water': return p.to_water
@@ -115,14 +119,14 @@ export const humidityLabel = (v: unknown) => {
 }
 
 // Two separate questions: where is it (one of three), and, if you have it, its label status (one of three).
-export type Place = 'ship' | 'have' | 'missing'
+export type Place = 'ship' | 'have' | 'missing' | 'refunded'
 export type LabelState = 'print' | 'labeled'
-export const PLACE: [Place, string][] = [['ship', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"]]
+export const PLACE: [Place, string][] = [['ship', 'Shipping'], ['have', 'Have it'], ['missing', "Can't find"], ['refunded', 'Refunded']]
 export const LABEL: [LabelState, string][] = [['print', 'Needs label'], ['labeled', 'Labeled']]
-export const placeOf = (p: Plant): Place => (p.shipping ? 'ship' : !p.have_it ? 'missing' : 'have')
+export const placeOf = (p: Plant): Place => (p.refunded ? 'refunded' : p.shipping ? 'ship' : !p.have_it ? 'missing' : 'have')
 export const labelOf = (p: Plant): LabelState => (p.labeled ? 'labeled' : 'print')
 export function placePatch(v: string): Partial<Plant> {
-  if (v === 'have') return { shipping: false, have_it: true, labeled: false, to_print: true }
-  return { shipping: v === 'ship', have_it: false, labeled: false, to_print: false }
+  if (v === 'have') return { refunded: false, shipping: false, have_it: true, labeled: false, to_print: true }
+  return { refunded: v === 'refunded', shipping: v === 'ship', have_it: false, labeled: false, to_print: false }
 }
 export const labelPatch = (v: string): Partial<Plant> => ({ labeled: v === 'labeled', to_print: v === 'print' })
