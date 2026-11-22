@@ -76,7 +76,7 @@ export function GenusCards({ list, photos, onOpen }: { list: Plant[]; photos: Ph
   )
 }
 
-export function IllusShelf({ list, photos, onOpen, fav, sortBy = 'name' }: { list: Plant[]; photos: Photos; onOpen: (id: string) => void; fav?: FavApi; sortBy?: SortBy }) {
+export function IllusShelf({ list, photos, onOpen, fav, sortBy = 'name', spot }: { list: Plant[]; photos: Photos; onOpen: (id: string) => void; fav?: FavApi; sortBy?: SortBy; spot?: string | null }) {
   return (
     <>
       {sections(list, sortBy).map(({ k, items }) => (
@@ -84,7 +84,7 @@ export function IllusShelf({ list, photos, onOpen, fav, sortBy = 'name' }: { lis
           <h3>{k} <span className="mut">({items.length})</span></h3>
           <div className="irow">
             {items.map((p) => (
-              <div key={p.id} className={'icell' + (p.have_it || p.shipping ? '' : ' off')} onClick={() => onOpen(p.id)}>
+              <div key={p.id} data-pid={p.id} className={'icell' + (p.have_it || p.shipping ? '' : ' off') + (spot === p.id ? ' spot' : '')} onClick={() => onOpen(p.id)}>
                 <SellBadge p={p} corner />
                 <HeartBtn p={p} fav={fav} />
                 <PlantArt p={p} photos={photos} />
@@ -100,8 +100,8 @@ export function IllusShelf({ list, photos, onOpen, fav, sortBy = 'name' }: { lis
 }
 
 export function CardGrid({
-  list, all, photos, onOpen, onWhere, readOnly, fav, sortBy,
-}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean; fav?: FavApi; sortBy?: SortBy }) {
+  list, all, photos, onOpen, onWhere, readOnly, fav, sortBy, spot,
+}: { list: Plant[]; all: Plant[]; photos: Photos; onOpen: (id: string) => void; onWhere?: (id: string, patch: Partial<Plant>) => void; readOnly?: boolean; fav?: FavApi; sortBy?: SortBy; spot?: string | null }) {
   const nums = labelNums(all)
   if (sortBy) {
     return (
@@ -109,7 +109,7 @@ export function CardGrid({
         {sections(list, sortBy).map(({ k, items }) => (
           <div key={k}>
             <h3 className="cgh">{k} <span className="mut">({items.length})</span></h3>
-            <CardGrid list={items} all={all} photos={photos} onOpen={onOpen} onWhere={onWhere} readOnly={readOnly} fav={fav} />
+            <CardGrid list={items} all={all} photos={photos} onOpen={onOpen} onWhere={onWhere} readOnly={readOnly} fav={fav} spot={spot} />
           </div>
         ))}
       </>
@@ -118,7 +118,7 @@ export function CardGrid({
   return (
     <div className="cardgrid">
       {list.map((p) => (
-        <div key={p.id} className={'pcard' + (p.have_it || p.shipping ? '' : ' off')}>
+        <div key={p.id} data-pid={p.id} className={'pcard' + (p.have_it || p.shipping ? '' : ' off') + (spot === p.id ? ' spot' : '')}>
           <SellBadge p={p} corner />
           <HeartBtn p={p} fav={fav} />
           <button className="pc" onClick={() => onOpen(p.id)}>

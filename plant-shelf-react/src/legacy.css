@@ -92,3 +92,9 @@ td,th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 details summary{cursor:pointer;color:var(--sage-d);margin-top:12px}
 .cgh{font-size:15px;color:var(--sage-d);margin:18px 0 6px}
+
+.spot{outline:3px solid var(--sage);outline-offset:3px;border-radius:14px;animation:spotpulse 1.6s ease-in-out 3}
+@keyframes spotpulse{0%,100%{box-shadow:0 0 0 0 rgba(143,184,158,.0)}50%{box-shadow:0 0 18px 6px rgba(143,184,158,.6)}}
+.spotbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--sage-l,#dfeee3);color:var(--ink,#1d2a22);font-size:14px}
+.spotbar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spotbar .btn{padding:6px 12px;font-size:13px}

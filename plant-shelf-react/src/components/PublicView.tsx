@@ -50,6 +50,7 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
   const [gsel, setGsel] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [modal, setModal] = useState<string | null>(null)
+  const [spot, setSpot] = useState<string | null>(null) // plant a QR code / link pointed at
   const [following, setFollowing] = useState(false)
   const [favs, setFavs] = useState<Set<string>>(new Set())
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light')
@@ -72,8 +73,21 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
     const want = new URLSearchParams(location.search).get('plant')
     if (!want || !pub) return
     const i = pub.plants.findIndex((p) => p.uid === want || (p as { plant_id?: string }).plant_id?.toLowerCase() === want.toLowerCase())
-    if (i >= 0) setModal('pub' + i)
+    if (i >= 0) {
+      // Go to the plant's own spot on the shelf and light it up, instead of popping its details open over the top of the page.
+      setGsel(pub.plants[i].genus || 'Other')
+      setSpot('pub' + i)
+    }
   }, [pub])
+
+  useEffect(() => {
+    if (!spot) return
+    const t = setTimeout(() => {
+      const el = document.querySelector(`[data-pid="${spot}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+    return () => clearTimeout(t)
+  }, [spot, gsel, view])
 
   async function toggleFollow() {
     if (!userId || !pub?.owner_id) return
@@ -162,14 +176,22 @@ export default function PublicView({ slug, mineSlug, userId }: { slug: string; m
     }
     sub = sortList(sub, 'name')
     body = <>{head}{!sub.length ? <p className="mut">Nothing matches.</p> : view === 'cards'
-      ? <CardGrid list={sub} all={plants} photos={photos} onOpen={open} readOnly fav={fav} />
-      : <IllusShelf list={sub} photos={photos} onOpen={open} fav={fav} />}</>
+      ? <CardGrid list={sub} all={plants} photos={photos} onOpen={open} readOnly fav={fav} spot={spot} />
+      : <IllusShelf list={sub} photos={photos} onOpen={open} fav={fav} spot={spot} />}</>
   }
+  const spotPlant = plants.find((p) => p.id === spot)
   const modalPlant = plants.find((p) => p.id === modal) as (typeof plants)[number] & { uid?: string } | undefined
 
   return (
     <>
       {banner}{top}
+      {spotPlant && !modalPlant && (
+        <div className="spotbar">
+          <span>Showing <b>{spotPlant.plant_name}</b></span>
+          <button className="btn" onClick={() => setModal(spotPlant.id)}>View details</button>
+          <button className="link" onClick={() => { setSpot(null); setGsel(null) }}>Show all</button>
+        </div>
+      )}
       <div className="wrap">
         <div className="hero" style={{ padding: 0 }}>
           <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: LIGHTS }} />
