@@ -47,15 +47,15 @@ export function savePicked(cols: string[]) {
 // Everything you have that does not have its label yet.
 export const needsLabel = (plants: Plant[]) => plants.filter((p) => whereOf(p) === 'print')
 
-export async function downloadPrintSheet(all: Plant[], cols: string[], slug?: string): Promise<number> {
-  const list = needsLabel(all)
+export async function downloadPrintSheet(all: Plant[], cols: string[], slug?: string, everyPlant = false): Promise<number> {
+  const list = everyPlant ? all : needsLabel(all)
   if (!list.length) return 0
   const nums = labelNums(all)
   const use = PCOLS.filter((c) => cols.includes(c[0]))
   const aoa = [use.map((c) => c[0]), ...list.map((p) => use.map((c) => { const v = c[1](p, nums, slug); return v == null ? '' : v }))]
   const XLSX = await import('xlsx')
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Print Tags')
-  XLSX.writeFile(wb, 'plant_labels_to_print.xlsx')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), everyPlant ? 'All Plants' : 'Print Tags')
+  XLSX.writeFile(wb, everyPlant ? 'all_plants.xlsx' : 'plant_labels_to_print.xlsx')
   return list.length
 }

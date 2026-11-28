@@ -8,8 +8,10 @@ export default function PrintPanel({ plants, onMarkLabeled, flash, slug }: { pla
   const [cols, setCols] = useState<string[]>(pickedCols)
   const [mark, setMark] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [which, setWhich] = useState<'labels' | 'all'>('labels')
   const list = needsLabel(plants)
-  if (!list.length) return null
+  const every = which === 'all' || !list.length // with nothing waiting for a label, only the all-plants download makes sense
+  if (!plants.length) return null
 
   const toggle = (n: string) => {
     const next = cols.includes(n) ? cols.filter((c) => c !== n) : [...cols, n]
@@ -19,8 +21,8 @@ export default function PrintPanel({ plants, onMarkLabeled, flash, slug }: { pla
   async function go() {
     if (!cols.length) return flash('Pick at least one column')
     setBusy(true)
-    const n = await downloadPrintSheet(plants, cols, slug)
-    if (mark) {
+    const n = await downloadPrintSheet(plants, cols, slug, every)
+    if (mark && !every) {
       const e = await onMarkLabeled(list.map((p) => p.id))
       flash(e ? 'Downloaded, but could not mark them labeled: ' + e : `Downloaded and marked ${n} labeled`)
     } else flash(`Downloaded ${n} label${n > 1 ? 's' : ''}`)
@@ -29,9 +31,13 @@ export default function PrintPanel({ plants, onMarkLabeled, flash, slug }: { pla
 
   return (
     <div className="card">
-      <b>{list.length} label{list.length > 1 ? 's' : ''} waiting to print</b>
+      <div className="seg2" style={{ marginBottom: 8 }}>
+        <button className={!every ? 'on' : ''} disabled={!list.length} onClick={() => setWhich('labels')}>Labels to print ({list.length})</button>
+        <button className={every ? 'on' : ''} onClick={() => setWhich('all')}>All plants ({plants.length})</button>
+      </div>
+      <b>{every ? `${plants.length} plant${plants.length > 1 ? 's' : ''}, whatever their label status` : `${list.length} label${list.length > 1 ? 's' : ''} waiting to print`}</b>
       <div className="row" style={{ marginTop: 8 }}>
-        <button className="btn" onClick={() => setOpen(!open)}><Printer size={15} /> Download print sheet</button>
+        <button className="btn" onClick={() => setOpen(!open)}><Printer size={15} /> {every ? 'Download all plants' : 'Download print sheet'}</button>
       </div>
       {open && (
         <div className="picker">
@@ -41,7 +47,7 @@ export default function PrintPanel({ plants, onMarkLabeled, flash, slug }: { pla
               <label key={n} className="rad"><input type="checkbox" checked={cols.includes(n)} onChange={() => toggle(n)} /> {n}</label>
             ))}
           </div>
-          <label className="rad" style={{ marginTop: 8 }}><input type="checkbox" checked={mark} onChange={(e) => setMark(e.target.checked)} /> Mark these as Labeled after downloading</label>
+          {!every && <label className="rad" style={{ marginTop: 8 }}><input type="checkbox" checked={mark} onChange={(e) => setMark(e.target.checked)} /> Mark these as Labeled after downloading</label>}
           <div className="row" style={{ marginTop: 10 }}><button className="btn" disabled={busy} onClick={go}>Download Excel</button></div>
         </div>
       )}
