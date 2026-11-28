@@ -6,6 +6,7 @@ import AddPlant from './components/AddPlant'
 import ImportView from './components/ImportView'
 import ListView from './components/ListView'
 import SheetView from './components/SheetView'
+import { downloadPlants } from './lib/importer'
 import PrintPanel from './components/PrintPanel'
 import PublicView from './components/PublicView'
 import ShareView from './components/ShareView'
@@ -130,6 +131,7 @@ export default function App() {
           <div className="mut" style={{ padding: '10px 16px', fontSize: 13, borderBottom: '1px solid var(--line)' }}>{prof.public_slug ? `@${prof.public_slug}` : user.email}</div>
           <button onClick={() => go('add')}>Add a plant</button>
           <button onClick={() => go('imp')}>Import from Excel</button>
+          <button onClick={async () => { setMenuOpen(false); const n = await downloadPlants(plants); flash(`Downloaded ${n} plants`) }}>Download my plants (Excel)</button>
           <button onClick={() => go('share')}>Share my shelf</button>
           <button onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMenuOpen(false) }}>{theme === 'dark' ? '☀ Switch to light mode' : '☾ Switch to dark mode'}</button>
           <button onClick={() => supabase.auth.signOut()}>Sign out</button>

@@ -77,6 +77,22 @@ export async function parseSheet(buf: ArrayBuffer): Promise<ParseResult> {
   return { rows, ignored, skipped }
 }
 
+// Every plant in the same columns the importer reads, so the file can be edited and imported again.
+export async function downloadPlants(plants: Record<string, unknown>[]): Promise<number> {
+  const XLSX = await import('xlsx')
+  const heads = COLS.map((c) => c[0])
+  const rows = plants.map((p) => COLS.map(([, key, kind]) => {
+    const v = p[key]
+    if (v == null || v === '') return ''
+    if (kind === 'bool') return v ? 'Yes' : ''
+    return v as string | number
+  }))
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([heads, ...rows]), 'Plants')
+  XLSX.writeFile(wb, 'my_plants.xlsx')
+  return plants.length
+}
+
 export async function downloadTemplate() {
   const XLSX = await import('xlsx')
   const heads = COLS.map((c) => c[0])
