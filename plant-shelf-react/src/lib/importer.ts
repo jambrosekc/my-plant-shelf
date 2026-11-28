@@ -72,8 +72,8 @@ export async function parseSheet(buf: ArrayBuffer): Promise<ParseResult> {
     rows.push(o)
   }
   if (!rows.length) return { error: 'No plants found. Is the Plant Name column filled in?' }
-  // A simple sheet with no Have It / Shipping / Refunded column: treat every plant as one you have.
-  if (!head.includes('Have It') && !head.includes('Shipping') && !head.includes('Refunded')) rows.forEach((r) => { r.have_it = true })
+  // A row where Have It, Shipping and Refunded are all left blank: treat it as a plant you have.
+  rows.forEach((r) => { if (r.have_it == null && r.shipping == null && r.refunded == null) r.have_it = true })
   return { rows, ignored, skipped }
 }
 
