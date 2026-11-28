@@ -1,5 +1,6 @@
 import type { Plant } from './types'
 import { labelNums, whereOf } from './helpers'
+import { COLS } from './importer'
 
 type Getter = (p: Plant, nums: Record<string, string>, slug?: string) => unknown
 // name, how to read it, on by default (the columns the Niimbot label template uses)
@@ -15,6 +16,20 @@ export const PCOLS: [string, Getter, boolean][] = [
   ['Medium', (p) => p['soil_medium'], false],
   ['Notes', (p) => p.notes, false],
 ]
+
+// Every other field in the app is also offered, off by default, using the same names as the Excel import columns.
+const SHOWN: Record<string, string> = {
+  plant_name: 'Name', seller_name: 'Seller', purchase_date: 'Date Purchased', plant_id: 'Plant ID', genus: 'Genus',
+  purchase_stage: 'Stage', soil_medium: 'Medium', notes: 'Notes',
+}
+COLS.forEach(([label, key, kind]) => {
+  if (SHOWN[key]) return
+  PCOLS.push([label, (p) => {
+    const v = (p as Record<string, unknown>)[key]
+    if (v == null || v === '') return ''
+    return kind === 'bool' ? (v ? 'Yes' : '') : v
+  }, false])
+})
 
 export function pickedCols(): string[] {
   let saved: string[] | null = null
